@@ -5,7 +5,7 @@ public class OrderItem{
     private long cart_id;
     private Product product;
     private long qty;
-    private double subtotal;
+    private double amount;
 
     public OrderItem() {
     }
@@ -35,12 +35,12 @@ public class OrderItem{
     }
 
     public double getAmount() {
-        return this.subtotal;
+        return this.amount;
     }
 
 
     public void setAmount(double amount) {
-        this.subtotal = amount;
+        this.amount = amount;
     }
 
     @Override
@@ -49,7 +49,7 @@ public class OrderItem{
                 "cart_id=" + cart_id +
                 ", product=" + product +
                 ", qty=" + qty +
-                ", amount=" + subtotal +
+                ", amount=" + amount +
                 '}';
     }
 }

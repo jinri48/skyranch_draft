@@ -49,7 +49,11 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
        cartViewHolder.mProName.setText(currentItem.getProduct().getName());
        cartViewHolder.mProQty.setText("Qty: " + currentItem.getQty());
        cartViewHolder.mProTotalAmount.setText("Amount: " + String.format ("%,.2f", currentItem.getAmount()));
-       Picasso.get().load(currentItem.getProduct().getImgUrl()).fit().centerCrop().into(cartViewHolder.mProImg);
+       Picasso.get().load(currentItem.getProduct().getImgUrl()).error(R.drawable.ic_shopping_cart_primary_24dp).fit().centerCrop().into(cartViewHolder.mProImg);
+
+
+
+
 
     }
 
