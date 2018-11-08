@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">skyranch_draft</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_add_favourite">Add to Favourites</string>
+    <string name="action_play_next">Play Next</string>
+    <string name="backdrop_title">Shop Now</string>
+    <string name="backdrop_subtitle">Select a ride/s for your customer</string>
+    <string name="sign_out">Sign out</string>
+</resources>
