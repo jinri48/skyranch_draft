@@ -118,6 +118,7 @@ public class LoginActivity extends AppCompatActivity {
                             }
                         } catch (JSONException e) {
                             e.printStackTrace();
+                            Log.d(TAG, "onResponse:for login " +e.getMessage());
                         }
 
 

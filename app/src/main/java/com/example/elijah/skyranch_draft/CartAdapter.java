@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -68,16 +69,16 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
             mProName = itemView.findViewById(R.id.tvCartProName);
             mProQty = itemView.findViewById(R.id.tvCartProQty);
             mProId = itemView.findViewById(R.id.tvCartProId);
-            mProImg = itemView.findViewById(R.id.cart_img);
+            mProImg = itemView.findViewById(R.id.ivCartPro_Img);
             mProTotalAmount = itemView.findViewById(R.id.tvCartProPriceTotal);
             mImgRemove = itemView.findViewById(R.id.bRemoveCartItem);
             mImgRemove.setOnClickListener(this);
+
         }
 
         @Override
         public void onClick(View v) {
             if(v.equals(mImgRemove)){
-
                 removeAt(getAdapterPosition());
             }else if (mItemClickListener != null) {
                 mItemClickListener.onItemClick(v, getAdapterPosition());
@@ -87,10 +88,16 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
 
 
     public void removeAt(int position) {
-        mDBHelper.deleteItem(orderItemList.get(position));
-        orderItemList.remove(position);
-        notifyItemRemoved(position);
-        notifyItemRangeChanged(position, orderItemList.size());
+        int deletedRow = mDBHelper.deleteItem(orderItemList.get(position));
+        if(deletedRow == 1){
+            orderItemList.remove(position);
+            notifyItemRemoved(position);
+            notifyItemRangeChanged(position, orderItemList.size());
+            Cart.tvCartPriceTotal.setText("Total: P" +String.format ("%,.2f", getTotalItems(orderItemList)));
+        }else {
+            Toast.makeText(mContext, "Error in deleting a record. Try again", Toast.LENGTH_SHORT).show();
+        }
+
 
     }
 

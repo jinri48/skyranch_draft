@@ -2,20 +2,20 @@ package com.example.elijah.skyranch_draft;
 
 public class OrderItem{
 
-    private long id;
+    private long cart_id;
     private Product product;
     private long qty;
-    private double amount;
+    private double subtotal;
 
     public OrderItem() {
     }
 
     public long getId() {
-        return id;
+        return cart_id;
     }
 
     public void setId(long id) {
-        this.id = id;
+        this.cart_id = id;
     }
 
     public Product getProduct() {
@@ -35,21 +35,21 @@ public class OrderItem{
     }
 
     public double getAmount() {
-        return this.amount;
+        return this.subtotal;
     }
 
 
     public void setAmount(double amount) {
-        this.amount = amount;
+        this.subtotal = amount;
     }
 
     @Override
     public String toString() {
         return "OrderItem{" +
-                "id=" + id +
+                "cart_id=" + cart_id +
                 ", product=" + product +
                 ", qty=" + qty +
-                ", amount=" + amount +
+                ", amount=" + subtotal +
                 '}';
     }
 }

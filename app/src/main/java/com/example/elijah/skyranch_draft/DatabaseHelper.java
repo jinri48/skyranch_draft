@@ -35,6 +35,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     //shopping cart table
     private static final String TABLE_CART = "cart";
     private static final String KEY_CART_ID = "_cart_id";
+    private static final String KEY_CART_HEADER_ID = "_header_id" ;
     private static final String KEY_CART_PRO_ID = "pro_id";
     private static final String KEY_CART_QTY = "qty";
     private static final String KEY_CART_PRICE = "sub_total";
@@ -44,7 +45,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String KEY_CART_PRO_PART_NO = "pro_part_no";
     private static final String KEY_CART_PRO_GROUP_NO = "pro_group_no";
     private static final String KEY_CART_PRO_RETAIL_PRICE = "pro_retail_price";
-
+    private static final String KEY_CART_PRO_STATUS = "pro_status";
 
 
     // instance of the database(singleton)
@@ -75,12 +76,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         String CREATE_TABLE_CART = "CREATE TABLE "+TABLE_CART + "("
                 +KEY_CART_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                +KEY_CART_HEADER_ID+ " INTEGER, "
                 +KEY_CART_PRO_ID + " INTEGER, "
-                +KEY_CART_PRO_NAME + " TEXT NOT NULL, "
+                +KEY_CART_PRO_NAME + " TEXT , "
                 +KEY_CART_PRO_IMG_URL+ " TEXT , "
                 +KEY_CART_PRO_RETAIL_PRICE+ " REAL , "
-                +KEY_CART_PRO_PART_NO + " TEXT NOT NULL, "
-                +KEY_CART_PRO_GROUP_NO+ " TEXT NOT NULL, "
+                +KEY_CART_PRO_PART_NO + " TEXT , "
+                +KEY_CART_PRO_GROUP_NO+ " TEXT , "
+                +KEY_CART_PRO_STATUS+ " TEXT , "
                 +KEY_CART_QTY + " INTEGER, "
                 +KEY_CART_PRICE + " REAL"
                 +")";
@@ -209,12 +212,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             Log.d(TAG, "addToCart: orderitemVal" +orderItem);
 
             values.put(KEY_CART_PRO_ID, orderItem.getProduct().getId());
-
             values.put(KEY_CART_PRO_NAME, orderItem.getProduct().getName());
             values.put(KEY_CART_PRO_GROUP_NO, orderItem.getProduct().getGroup_no());
             values.put(KEY_CART_PRO_PART_NO, orderItem.getProduct().getPart_no());
             values.put(KEY_CART_PRO_RETAIL_PRICE, orderItem.getProduct().getO_price());
-
+            values.put(KEY_CART_PRO_STATUS, String.valueOf(orderItem.getProduct().getStatus()));
+            values.put(KEY_CART_PRO_IMG_URL, orderItem.getProduct().getImgUrl());
             values.put(KEY_CART_QTY, orderItem.getQty());
             values.put(KEY_CART_PRICE, orderItem.getAmount());
 
@@ -232,12 +235,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return result;
     }
 
-    public void deleteItem(OrderItem orderItem) {
+    public int deleteItem(OrderItem orderItem) {
         SQLiteDatabase db = mDBInstance.getWritableDatabase();
         String whereClause = KEY_CART_ID +"=?";
         String whereArgs[] = {String.valueOf(orderItem.getId())};
-        db.delete(TABLE_CART, whereClause, whereArgs);
+        int numberOFEntriesDeleted = db.delete(TABLE_CART, whereClause, whereArgs);
         Log.d(TAG, "Deleted an item");
+        return numberOFEntriesDeleted;
     }
 
     static List<OrderItem> itemsInCart = new ArrayList<>();
@@ -303,6 +307,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     product.setGroup_no(cursor.getString(cursor.getColumnIndex(KEY_CART_PRO_GROUP_NO)));
                     product.setPart_no(cursor.getString(cursor.getColumnIndex(KEY_CART_PRO_PART_NO)));
                     product.setO_price(cursor.getDouble(cursor.getColumnIndex(KEY_CART_PRO_RETAIL_PRICE)));
+                    product.setStatus(cursor.getString(cursor.getColumnIndex(KEY_CART_PRO_STATUS)).charAt(0));
+                    product.setImgUrl(cursor.getString(cursor.getColumnIndex(KEY_CART_PRO_IMG_URL)));
                     order.setProduct(product);
                     itemsInCart.add(order);
                     cursor.moveToNext();
