@@ -30,7 +30,7 @@ public class LoginActivity extends AppCompatActivity {
     private EditText etUsername;
     private EditText etPassword;
     private Button btnLogin;
-    private String mToken;
+    public static String mToken;
     private SessionManager session;
 
     @Override
@@ -40,15 +40,15 @@ public class LoginActivity extends AppCompatActivity {
 
         etUsername = findViewById(R.id.input_username);
         etPassword = findViewById(R.id.input_password);
-        btnLogin   = findViewById(R.id.btn_login);
+        btnLogin = findViewById(R.id.btn_login);
 
         // establish a database connection
         mDBHelper = DatabaseHelper.newInstance(this);
-        mDatabase  = mDBHelper.getWritableDatabase();
+        mDatabase = mDBHelper.getWritableDatabase();
 
         // Session Manager
         session = new SessionManager(this);
-        Log.d(TAG, "onCreate: " +session.isLoggedIn());
+        Log.d(TAG, "onCreate: " + session.isLoggedIn());
 //         Check if user is already logged in or not
         if (session.isLoggedIn()) {
             // User is already logged in. Take him to main activity
@@ -60,33 +60,33 @@ public class LoginActivity extends AppCompatActivity {
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-               boolean validFields = validate(); // check if the fields are filled out
-                if(validFields){
+                boolean validFields = validate(); // check if the fields are filled out
+                if (validFields) {
                     login(etUsername.getText().toString(), etPassword.getText().toString());
                 }
             }
         });
 
 
-
     }
 
-    private boolean validate(){
+    private boolean validate() {
         String uname = etUsername.getText().toString();
-        if (uname.trim().equals("")){
+        if (uname.trim().equals("")) {
             Toast.makeText(LoginActivity.this, "Please provide a username", Toast.LENGTH_SHORT).show();
             return false;
         }
-        if (etPassword.getText().toString().isEmpty()){
+        if (etPassword.getText().toString().isEmpty()) {
             Toast.makeText(LoginActivity.this, "Please provide a password", Toast.LENGTH_SHORT).show();
             return false;
         }
         return true;
     }
 
-    private void login(final String username, final String password){
+    private void login(final String username, final String password) {
 //        String url = AppConfig.BASE_URL_API+"/login";
-        String url = "http://172.16.12.26:8000/api/login";
+//        String url = "http://172.16.12.26:8000/api/login";
+        String url = AppConfig.LOGIN;
         RequestQueue queue = VolleySingleton
                 .getInstance(LoginActivity.this.getApplicationContext())
                 .getRequestQueue();
@@ -102,43 +102,44 @@ public class LoginActivity extends AppCompatActivity {
 
                             Toast.makeText(LoginActivity.this, msg, Toast.LENGTH_SHORT).show();
                             // Successful logged in
-                            if (status_code == 200){
+                            if (status_code == 200) {
                                 String name = jObj.getString("name");
                                 String token = jObj.getString("token");
 
                                 LoginToken login_token = new LoginToken(null, token, name.trim());
                                 mDBHelper.addUserToken(login_token);
                                 Log.d(TAG, "onResponse: " + login_token.toString());
+                                mToken = token;
 
                                 session.setLogin(true);
-                                Log.d(TAG, "onResponse: isLoggedIn" +session.isLoggedIn());
+                                Log.d(TAG, "onResponse: isLoggedIn" + session.isLoggedIn());
                                 finish();
                                 Intent intent = new Intent(LoginActivity.this, ProductActivity.class);
                                 startActivity(intent);
                             }
                         } catch (JSONException e) {
                             e.printStackTrace();
-                            Log.d(TAG, "onResponse:for login " +e.getMessage());
+                            Log.d(TAG, "onResponse:for login " + e.getMessage());
                         }
 
 
                     }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Toast.makeText(LoginActivity.this, "Error " + error.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        }){
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(LoginActivity.this, "Error " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                }) {
 
             @Override
             protected Map<String, String> getParams() {
                 // Posting parameters to login url
                 Map<String, String> params = new HashMap<String, String>();
-                params.put("username", username );
-                params.put("password",password );
+                params.put("username", username);
+                params.put("password", password);
                 return params;
             }
-
         };
 
         VolleySingleton.getInstance(LoginActivity.this).addToRequestQueue(stringRequest);

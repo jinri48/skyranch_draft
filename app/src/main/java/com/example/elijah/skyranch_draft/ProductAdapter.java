@@ -52,7 +52,8 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
             String pro_name = currentItem.getName();
             Double pro_price = currentItem.getO_price();
             productViewHolder.mProName.setText(pro_name);
-            Picasso.get().load(pro_imgUrl).fit().centerCrop().into(productViewHolder.mProImg);
+
+            Picasso.get().load(pro_imgUrl).error(R.drawable.pro_img_placeholder).fit().centerCrop().into(productViewHolder.mProImg);
             productViewHolder.mRetailPrice.setText(String.valueOf(pro_price));
 
 

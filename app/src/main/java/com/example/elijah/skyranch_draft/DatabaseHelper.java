@@ -203,6 +203,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 
 //    -------CART-------------
+
     public long addToCart(OrderItem orderItem){
         long result = -1;
         SQLiteDatabase db = mDBInstance.getWritableDatabase();
@@ -235,54 +236,30 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return result;
     }
 
+    /*
+    * Delete an item in the cart
+    * */
     public int deleteItem(OrderItem orderItem) {
         SQLiteDatabase db = mDBInstance.getWritableDatabase();
         String whereClause = KEY_CART_ID +"=?";
         String whereArgs[] = {String.valueOf(orderItem.getId())};
         int numberOFEntriesDeleted = db.delete(TABLE_CART, whereClause, whereArgs);
-        Log.d(TAG, "Deleted an item");
         return numberOFEntriesDeleted;
     }
 
-    static List<OrderItem> itemsInCart = new ArrayList<>();
-//    public List<OrderItem> getAllCartItems(){
-//        List<OrderItem> itemsInCart = new ArrayList<>();
-//        SQLiteDatabase db = mDBInstance.getReadableDatabase();
-//        String selectQuery = "SELECT * FROM " + TABLE_CART;
-//
-//        if (db !=null){
-//            final Cursor cursor = db.rawQuery(selectQuery, null);
-//            if (cursor.moveToFirst()) {
-//                while (!cursor.isAfterLast()) {
-//                    OrderItem order = new OrderItem();
-//                    order.setId(cursor.getInt(0));
-//                    Product product = new Product();
-////                     call the api to get the product details
-//                    AppApi api = new AppApi(mContext);
-//                    api.getProductItem(new AppApi.VolleyCallback() {
-//                        @Override
-//                        public void onSuccess(Product productItem) {
-//                            product = productItem;
-//                            Log.d(TAG, "onSuccess: api " +productItem);
-//                        }
-//                    }, cursor.getLong(1));
-//
-//                    order.setProduct(product);
-//                    order.setQty(cursor.getInt(2));
-//                    order.setAmount(cursor.getDouble(3));
-//                    itemsInCart.add(order);
-//                    Log.d(TAG, "onSuccess: order " +order);
-//                    Log.d(TAG, "getAllCartItems: outside" +order);
-//                    cursor.moveToNext();
-//                }
-//            }
-//            cursor.close();
-//        }
-//        db.close();
-//        return itemsInCart;
-//    }
+    /*
+    *  Delete All Rows in the cart
+    * */
 
-    static List<Product> productItems = new ArrayList<>();
+    public int deleteAllItems(){
+        SQLiteDatabase db = mDBInstance.getWritableDatabase();
+
+        int result = db.delete(TABLE_CART, null, null);
+        db.close();
+        Log.d(TAG, "deleteAllItems result " +result);
+        return result;
+    }
+
 
     public ArrayList<OrderItem> getCart(){
         ArrayList<OrderItem> itemsInCart = new ArrayList<>();
@@ -319,7 +296,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return itemsInCart;
     }
-
+    /*
+    static List<Product> productItems = new ArrayList<>();
+    static List<OrderItem> itemsInCart = new ArrayList<>();
     public static Product productItem = null;
     public List<OrderItem> getCart_samp(){
         List<OrderItem> itemsInCart = new ArrayList<>();
@@ -353,7 +332,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return itemsInCart;
 
     }
-
     public List<OrderItem> cart_samp(){
         List<OrderItem> orders = getCart();
         final CountDownLatch signal = new CountDownLatch(orders.size());
@@ -385,5 +363,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Log.d(TAG, "cart_samp: before return " +orders);
         return orders;
     }
+    */
+
 
 }

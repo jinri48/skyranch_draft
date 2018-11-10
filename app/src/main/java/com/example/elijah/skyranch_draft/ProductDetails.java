@@ -30,7 +30,7 @@ public class ProductDetails extends AppCompatActivity {
         TextView tvProPrice = findViewById(R.id.tvPrice);
 
         tvProName.setText(product.getName());
-        Picasso.get().load(product.getImgUrl()).fit().centerInside().into(ivProImg);
+        Picasso.get().load(product.getImgUrl()).error(R.drawable.pro_img_placeholder).fit().centerInside().into(ivProImg);
         tvProPrice.setText(String.valueOf(product.getO_price()));
 
 

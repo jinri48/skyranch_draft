@@ -76,7 +76,8 @@ public class ProductActivity extends AppCompatActivity {
         // Session Manager
         session = new SessionManager(this);
 
-
+        mAdapter = new ProductAdapter(ProductActivity.this, mListItems);
+        mRecyclerView.setAdapter(mAdapter);
     }
 
 
@@ -142,9 +143,9 @@ public class ProductActivity extends AppCompatActivity {
                                 mListItems.add(product);
                             }
 
+                            mAdapter.notifyDataSetChanged();
 //                            Log.d(TAG, "onResponse: " +mListItems.toString());
-                            mAdapter = new ProductAdapter(ProductActivity.this, mListItems);
-                            mRecyclerView.setAdapter(mAdapter);
+
 
 
                         } catch (JSONException e) {
@@ -245,6 +246,6 @@ public class ProductActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        parseJSON();
+        Log.d(TAG, "onResume: " + mListItems);
     }
 }

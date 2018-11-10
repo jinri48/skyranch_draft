@@ -51,10 +51,6 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
        cartViewHolder.mProTotalAmount.setText("Amount: " + String.format ("%,.2f", currentItem.getAmount()));
        Picasso.get().load(currentItem.getProduct().getImgUrl()).error(R.drawable.ic_shopping_cart_primary_24dp).fit().centerCrop().into(cartViewHolder.mProImg);
 
-
-
-
-
     }
 
     @Override
@@ -101,7 +97,6 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
         }else {
             Toast.makeText(mContext, "Error in deleting a record. Try again", Toast.LENGTH_SHORT).show();
         }
-
 
     }
 
