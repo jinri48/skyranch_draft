@@ -13,11 +13,21 @@
         android:theme="@style/AppTheme">
         <activity android:name=".MainActivity"></activity>
         <activity android:name=".SecondScreen" />
-        <activity android:name=".ProductActivity"></activity>
+        <activity android:name=".ProductActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/searchable" />
+        </activity>
+
         <activity
             android:name=".ProductDetails"
             android:label="Details"
-            android:parentActivityName=".ProductActivity" />
+            android:parentActivityName=".ProductActivity"
+            android:theme="@style/WithActionbar" />
         <activity android:name=".LoginActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -25,11 +35,19 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".Cart"></activity>
-        <meta-data android:name="com.google.android.gms.version"
-            android:value="@integer/google_play_services_version"/>
-        <meta-data android:name="com.google.android.gms.DEPENDENCIES"
-            android:value="barcode"/>
+        <activity
+            android:name=".Cart"
+            android:parentActivityName=".ProductActivity"
+            android:theme="@style/WithActionbar"></activity>
+
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+        <meta-data
+            android:name="com.google.android.gms.DEPENDENCIES"
+            android:value="barcode" />
+
+
     </application>
 
 </manifest>

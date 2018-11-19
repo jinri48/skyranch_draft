@@ -111,6 +111,7 @@ public class AppApi {
                             Product productItem = new Product();
                             productItem.setId(products.getLong("product_id"));
                             productItem.setName(products.getString("product_name"));
+                            productItem.setImgUrl(products.getString("img_url"));
 
                             Log.d(TAG, "onResponse: " +productItem);
                             callback.onSuccess(productItem);

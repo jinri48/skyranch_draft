@@ -84,8 +84,8 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
                 public void onClick(View v) {
                     int qty = Integer.parseInt(productViewHolder.mQty.getText().toString());
                     qty -= 1;
-                    if (qty < 0){
-                        qty = 0;
+                    if (qty < 1){
+                        qty = 1;
                     }
                     productViewHolder.mQty.setText(String.valueOf(qty));
 

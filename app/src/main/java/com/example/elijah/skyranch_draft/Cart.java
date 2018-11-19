@@ -11,6 +11,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -47,6 +48,7 @@ public class Cart extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cart);
 
+
         mDBHelper = DatabaseHelper.newInstance(this);
         mRecyclerView = findViewById(R.id.rv_cart);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -68,8 +70,10 @@ public class Cart extends AppCompatActivity {
 //                String placedOrders = gson.toJson(mCartItems);
 //                Log.d(TAG, "onClick: " + placedOrders);
 //                tvSampData.setText(placedOrders);
+                if(mCartItems.size() > 0){
+                    addOrder();
+                }
 
-                addOrder();
             }
         });
 
@@ -85,12 +89,12 @@ public class Cart extends AppCompatActivity {
                         try {
                             int status_code = response.getInt("status");
                             if (status_code == 200){
-                               mDBHelper.deleteAllItems();
-                               mCartItems.clear();
-                               mAdapter.notifyDataSetChanged();
-                               tvCartPriceTotal.setText("Total: P" + String.format("%,.2f", mAdapter.getTotalItems(mCartItems)));
+                                mDBHelper.deleteAllItems();
+                                mCartItems.clear();
+                                mAdapter.notifyDataSetChanged();
+                                tvCartPriceTotal.setText("Total: P" + String.format("%,.2f", mAdapter.getTotalItems(mCartItems)));
                             }
-                            Log.d(TAG, "onResponse: status code: "+status_code);
+                            Log.d(TAG, "onResponse: placed order status code: "+status_code);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -102,7 +106,19 @@ public class Cart extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Log.d(TAG, "onErrorResponse: " +error.getMessage());
+                        NetworkResponse response = error.networkResponse;
+                        Log.d(TAG, "onErrorResponse: network response - "+response);
+                        Log.d(TAG, "onErrorResponse: error - " +error);
+
+                        String errorMsg = error.getMessage();
+                        if(response != null && response.data != null){
+                            String errorString = new String(response.data);
+                            Log.i("log error", errorString);
+                            errorMsg = errorString;
+                            return;
+                        }
+
+                        Toast.makeText(Cart.this, "Error " + errorMsg, Toast.LENGTH_SHORT).show();
                     }
                 });
 

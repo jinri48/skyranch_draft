@@ -42,14 +42,14 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
 
     @Override
     public void onBindViewHolder(CartAdapter.CartViewHolder cartViewHolder, int i) {
-       final OrderItem currentItem = orderItemList.get(i);
-       long pro_id = currentItem.getProduct().getId();
-       Log.d(TAG, "onBindViewHolder: " +currentItem);
-       cartViewHolder.mProId.setText("Pro id: " +pro_id);
-       cartViewHolder.mProName.setText(currentItem.getProduct().getName());
-       cartViewHolder.mProQty.setText("Qty: " + currentItem.getQty());
-       cartViewHolder.mProTotalAmount.setText("Amount: " + String.format ("%,.2f", currentItem.getAmount()));
-       Picasso.get().load(currentItem.getProduct().getImgUrl()).error(R.drawable.ic_shopping_cart_primary_24dp).fit().centerCrop().into(cartViewHolder.mProImg);
+        final OrderItem currentItem = orderItemList.get(i);
+        long pro_id = currentItem.getProduct().getId();
+        Log.d(TAG, "onBindViewHolder: " +currentItem);
+        cartViewHolder.mProId.setText("Pro id: " +pro_id);
+        cartViewHolder.mProName.setText(currentItem.getProduct().getName());
+        cartViewHolder.mProQty.setText("Qty: " + currentItem.getQty());
+        cartViewHolder.mProTotalAmount.setText("Amount: " + String.format ("%,.2f", currentItem.getAmount()));
+        Picasso.get().load(currentItem.getProduct().getImgUrl()).error(R.drawable.ic_shopping_cart_primary_24dp).fit().centerCrop().into(cartViewHolder.mProImg);
 
     }
 
@@ -109,3 +109,4 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
 
     }
 }
+

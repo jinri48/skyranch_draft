@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.api.Api;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -100,12 +101,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-           // Drop older table if exist
-           db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERTOKENS);
-           db.execSQL("DROP TABLE IF EXISTS " + TABLE_CART);
+        // Drop older table if exist
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERTOKENS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_CART);
 
         // Create tables again
-           onCreate(db);
+        onCreate(db);
     }
 
 //    ---------USER TOKENS----------
@@ -138,8 +139,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     /*
-    * adds a token in the database
-    * */
+     * adds a token in the database
+     * */
 
     public void addUserToken(LoginToken userToken){
         long result= -1; // id of the row that was inserted
@@ -156,7 +157,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             values.put(KEY_NAME, userToken.getName());
             try {
                 result = db.insertOrThrow(TABLE_USERTOKENS, null, values);
-                Toast.makeText(mContext, "Added Record " +result, Toast.LENGTH_SHORT).show();
+//                Toast.makeText(mContext, "user was added", Toast.LENGTH_SHORT).show();
                 Log.d(TAG, "addUserToken: successfully added record id " +result);
             } catch (SQLException e) {
                 Log.d(TAG, "addUserToken: error in adding " +e.getMessage());
@@ -170,13 +171,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 
     /*
-    * gets a single record of token
-    * */
+     * gets a single record of token
+     * */
     public LoginToken getUserToken(String token) {
         SQLiteDatabase db = mDBInstance.getReadableDatabase();
 
         Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_USERTOKENS
-                + " WHERE " + KEY_TOKEN + " = '" + token + "'"
+                        + " WHERE " + KEY_TOKEN + " = '" + token + "'"
                 , null);
 
         LoginToken userToken = null;
@@ -232,13 +233,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             }
         }
 
-        Toast.makeText(mContext, "inserted row: "+result, Toast.LENGTH_SHORT).show();
+        Toast.makeText(mContext, "Successfully added an item to cart", Toast.LENGTH_SHORT).show();
         return result;
     }
 
     /*
-    * Delete an item in the cart
-    * */
+     * Delete an item in the cart
+     * */
     public int deleteItem(OrderItem orderItem) {
         SQLiteDatabase db = mDBInstance.getWritableDatabase();
         String whereClause = KEY_CART_ID +"=?";
@@ -248,8 +249,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     /*
-    *  Delete All Rows in the cart
-    * */
+     *  Delete All Rows in the cart
+     * */
 
     public int deleteAllItems(){
         SQLiteDatabase db = mDBInstance.getWritableDatabase();
@@ -267,7 +268,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String selectQuery = "SELECT * FROM " + TABLE_CART;
 
         if (db !=null){
-           Cursor cursor = db.rawQuery(selectQuery, null);
+            Cursor cursor = db.rawQuery(selectQuery, null);
             if (cursor.moveToFirst()) {
                 while (!cursor.isAfterLast()) {
                     OrderItem order = new OrderItem();

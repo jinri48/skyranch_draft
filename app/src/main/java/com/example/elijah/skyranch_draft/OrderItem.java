@@ -50,6 +50,6 @@ public class OrderItem{
                 ", product=" + product +
                 ", qty=" + qty +
                 ", amount=" + amount +
-                '}';
+                "} \n";
     }
 }

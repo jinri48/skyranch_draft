@@ -6,4 +6,6 @@
     <string name="backdrop_title">Shop Now</string>
     <string name="backdrop_subtitle">Select a ride/s for your customer</string>
     <string name="sign_out">Sign out</string>
+    <string name="app_label">Enchanted Kingdom</string>
+    <string name="search_hint">Search Products</string>
 </resources>

@@ -2,6 +2,7 @@ package com.example.elijah.skyranch_draft;
 
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -10,6 +11,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -26,12 +29,14 @@ public class LoginActivity extends AppCompatActivity {
     private static final String TAG = LoginActivity.class.getSimpleName();
     private DatabaseHelper mDBHelper;
     private SQLiteDatabase mDatabase;
+    public static String mToken;
+    private SessionManager session;
 
     private EditText etUsername;
     private EditText etPassword;
     private Button btnLogin;
-    public static String mToken;
-    private SessionManager session;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,9 +54,10 @@ public class LoginActivity extends AppCompatActivity {
         // Session Manager
         session = new SessionManager(this);
         Log.d(TAG, "onCreate: " + session.isLoggedIn());
-//         Check if user is already logged in or not
+        // Check if user is already logged in or not
         if (session.isLoggedIn()) {
             // User is already logged in. Take him to main activity
+//            Intent intent = new Intent(this, ProductActivity.class);
             Intent intent = new Intent(this, ProductActivity.class);
             startActivity(intent);
             finish();
@@ -105,6 +111,7 @@ public class LoginActivity extends AppCompatActivity {
                             if (status_code == 200) {
                                 String name = jObj.getString("name");
                                 String token = jObj.getString("token");
+                                String branch_id = jObj.getString("branch_id");
 
                                 LoginToken login_token = new LoginToken(null, token, name.trim());
                                 mDBHelper.addUserToken(login_token);
@@ -115,6 +122,7 @@ public class LoginActivity extends AppCompatActivity {
                                 Log.d(TAG, "onResponse: isLoggedIn" + session.isLoggedIn());
                                 finish();
                                 Intent intent = new Intent(LoginActivity.this, ProductActivity.class);
+                                intent.putExtra("branch_id", branch_id);
                                 startActivity(intent);
                             }
                         } catch (JSONException e) {
@@ -128,7 +136,24 @@ public class LoginActivity extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(LoginActivity.this, "Error " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                        NetworkResponse response = error.networkResponse;
+                        Log.d(TAG, "onErrorResponse: network response - "+response);
+                        Log.d(TAG, "onErrorResponse: error - " +error);
+                        Log.d(TAG, "onErrorResponse: error cause - " +error.getCause());
+                        String errorMsg = error.getMessage();
+                        if(response != null && response.data != null){
+                            String errorString = new String(response.data);
+                            Log.i("log error", errorString);
+                            errorMsg = errorString;
+                            return;
+                        }
+
+                        if(response == null) {
+
+                            errorMsg = "Sorry can't login an account. Try again";
+                        }
+
+                        Toast.makeText(LoginActivity.this, "Error " + errorMsg, Toast.LENGTH_SHORT).show();
                     }
                 }) {
 
@@ -141,7 +166,8 @@ public class LoginActivity extends AppCompatActivity {
                 return params;
             }
         };
-
+        // Add the realibility on the connection.
+        stringRequest.setRetryPolicy(new DefaultRetryPolicy(10000, 1, 1.0f));
         VolleySingleton.getInstance(LoginActivity.this).addToRequestQueue(stringRequest);
     }
 }
