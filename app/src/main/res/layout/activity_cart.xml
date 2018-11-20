@@ -5,16 +5,19 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".Cart">
+
     <TextView
         android:id="@+id/tvCartData"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
 
         android:layout_gravity="center|bottom"
-        android:gravity="bottom"
-        android:layout_weight="0"
         android:layout_marginTop="20dp"
-        android:text=""/>
+        android:layout_weight="0"
+        android:gravity="bottom"
+        android:text=""
+        android:visibility="gone"
+        />
     <!--<TextView-->
     <!--android:layout_width="wrap_content"-->
     <!--android:layout_height="wrap_content"-->
@@ -25,31 +28,42 @@
         android:id="@+id/rv_cart"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:scrollbars="vertical"
         android:layout_weight="1"
-        ></android.support.v7.widget.RecyclerView>
+        android:scrollbars="vertical"></android.support.v7.widget.RecyclerView>
 
     <TextView
         android:id="@+id/tvCartPriceTotal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="25sp"
         android:layout_gravity="center|bottom"
-        android:gravity="bottom"
-        android:layout_weight="0"
         android:layout_marginTop="20dp"
-        android:text="Total Amount P200"/>
-
-    <Button android:layout_width="match_parent"
-        android:layout_height="wrap_content"
         android:layout_weight="0"
-        android:textSize="18sp"
-        android:layout_marginHorizontal="15dp"
-        android:layout_gravity="center|bottom"
-        android:text="Place Order"
-        android:id="@+id/bPlaceOrder">
+        android:gravity="bottom"
+        android:text="Total Amount P0.00"
+        android:textSize="25sp" />
 
-    </Button>
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_gravity="center">
+
+        <Button
+            android:id="@+id/bRemoveItems"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Remove All Items"
+            android:textSize="18sp"></Button>
+
+        <Button
+            android:id="@+id/bPlaceOrder"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Place Order"
+            android:textSize="18sp"></Button>
+    </LinearLayout>
 
 
 </LinearLayout>

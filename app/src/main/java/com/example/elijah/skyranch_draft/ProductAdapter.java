@@ -136,7 +136,15 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
             public void onClick(View v) {
                 if (v.getId() == mAddToCart.getId()){
                     Product item =  productList.get(getAdapterPosition());
-                    long qty =  Long.parseLong(mQty.getText().toString());
+                    if (mQty.getText().toString().trim().equals("")){
+                        Toast.makeText(mContext, "Please set a quantity", Toast.LENGTH_SHORT).show();
+                        return;
+                    }else if (Long.parseLong(mQty.getText().toString().trim()) <= 0 ){
+                        Toast.makeText(mContext, "Can't add to cart when item is 0 or less", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    long qty =  Long.parseLong(mQty.getText().toString().trim());
                     double price = item.getO_price() * qty;
                     OrderItem order = new OrderItem();
                     order.setQty(Long.parseLong(mQty.getText().toString()));

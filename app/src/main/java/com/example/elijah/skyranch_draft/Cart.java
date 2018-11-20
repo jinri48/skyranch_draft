@@ -71,14 +71,32 @@ public class Cart extends AppCompatActivity {
 //                Log.d(TAG, "onClick: " + placedOrders);
 //                tvSampData.setText(placedOrders);
                 if(mCartItems.size() > 0){
+                    // TODO: Add an alert dialog to confirm the order/s
                     addOrder();
                 }
 
             }
         });
 
-    }
+        Button bRemoveItems = findViewById(R.id.bRemoveItems);
+        bRemoveItems.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mCartItems.size() > 0){
+                    // TODO: Add an alert dialog before deleting all items
+                    int result = mDBHelper.deleteAllItems();
+                    Log.d(TAG, "onClick: removeAllItems " + result);
+                    if (result >= 0){
 
+                        mCartItems.clear();
+                        mAdapter.notifyDataSetChanged();
+                        tvCartPriceTotal.setText("Total: P" + String.format("%,.2f", mAdapter.getTotalItems(mCartItems)));
+                    }
+                }
+
+            }
+        });
+    }
 
     private void addOrder() {
         String url = AppConfig.ADD_CART_ITEMS;

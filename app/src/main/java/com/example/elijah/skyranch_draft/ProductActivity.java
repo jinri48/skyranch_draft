@@ -133,6 +133,7 @@ public class ProductActivity extends AppCompatActivity implements SearchView.OnQ
         if (mQuery != null || mQuery == "") {
             Log.d(TAG, "onCreateOptionsMenu: mquery is not null,  value is" +mQuery);
             mSearchView.setQuery(mQuery, false);
+            mSearchView.setIconifiedByDefault(false);
         }
 
 //        search.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
