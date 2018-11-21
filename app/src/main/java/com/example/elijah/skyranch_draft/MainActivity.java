@@ -65,12 +65,12 @@ public class MainActivity extends AppCompatActivity {
         });
 
         Button btnPopulate = findViewById(R.id.bPopulate);
-        btnPopulate.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                createDummyData();
-            }
-        });
+//        btnPopulate.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                createDummyData();
+//            }
+//        });
 
         Button bShop = findViewById(R.id.bShop);
         bShop.setOnClickListener(new View.OnClickListener() {
@@ -97,13 +97,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void createDummyData(){
-        LoginToken dummy_user1 = new LoginToken(null, "Oount123", "jean09");
-        LoginToken dummy_user2 = new LoginToken(null, "Like423", "jean79");
-        LoginToken dummy_user3 = new LoginToken(null, "Good Times", "mrhacker");
-
-        mDBHelper.addUserToken(dummy_user1);
-        mDBHelper.addUserToken(dummy_user2);
-        mDBHelper.addUserToken(dummy_user3);
-    }
+//    public void createDummyData(){
+//        LoginToken dummy_user1 = new LoginToken(null, "Oount123", "jean09", 1001);
+//        LoginToken dummy_user2 = new LoginToken(null, "Like423", "jean79", 1002);
+//        LoginToken dummy_user3 = new LoginToken(null, "Good Times", "mrhacker", 1002);
+//
+//        mDBHelper.addUserToken(dummy_user1);
+//        mDBHelper.addUserToken(dummy_user2);
+//        mDBHelper.addUserToken(dummy_user3);
+//    }
 }

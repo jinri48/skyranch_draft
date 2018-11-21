@@ -46,7 +46,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_gravity="center">
+        android:layout_gravity="center"
+        android:layout_marginBottom="10dp"
+        >
 
         <Button
             android:id="@+id/bRemoveItems"
@@ -54,7 +56,11 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Remove All Items"
-            android:textSize="18sp"></Button>
+            android:textSize="14sp"
+            android:background="@color/colorPrimaryDark"
+            android:padding="10dp"
+            android:textColor="#fff"
+            />
 
         <Button
             android:id="@+id/bPlaceOrder"
@@ -62,7 +68,11 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Place Order"
-            android:textSize="18sp"></Button>
+            android:textSize="14sp"
+            android:background="@color/colorPrimary"
+            android:padding="10dp"
+            android:textColor="#fff"
+            />
     </LinearLayout>
 
 

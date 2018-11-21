@@ -22,6 +22,8 @@ import com.android.volley.toolbox.StringRequest;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -57,7 +59,6 @@ public class LoginActivity extends AppCompatActivity {
         // Check if user is already logged in or not
         if (session.isLoggedIn()) {
             // User is already logged in. Take him to main activity
-//            Intent intent = new Intent(this, ProductActivity.class);
             Intent intent = new Intent(this, ProductActivity.class);
             startActivity(intent);
             finish();
@@ -73,7 +74,22 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
+//        Log.d(TAG, "onCreate: connected " +isConnectedToServer(AppConfig.BASE_URL_API, 10));
 
+    }
+
+    public boolean isConnectedToServer(String url, int timeout) {
+        Log.d(TAG, "isConnectedToServer: " +url);
+        try{
+            URL myUrl = new URL(url);
+            URLConnection connection = myUrl.openConnection();
+            connection.setConnectTimeout(timeout);
+            connection.connect();
+            return true;
+        } catch (Exception e) {
+            // Handle your exceptions
+            return false;
+        }
     }
 
     private boolean validate() {
@@ -113,7 +129,7 @@ public class LoginActivity extends AppCompatActivity {
                                 String token = jObj.getString("token");
                                 String branch_id = jObj.getString("branch_id");
 
-                                LoginToken login_token = new LoginToken(null, token, name.trim());
+                                LoginToken login_token = new LoginToken(null, token, name.trim(), Long.valueOf(branch_id));
                                 mDBHelper.addUserToken(login_token);
                                 Log.d(TAG, "onResponse: " + login_token.toString());
                                 mToken = token;
@@ -136,24 +152,35 @@ public class LoginActivity extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
+                        VolleySingleton.showErrors(error, LoginActivity.this);
                         NetworkResponse response = error.networkResponse;
-                        Log.d(TAG, "onErrorResponse: network response - "+response);
-                        Log.d(TAG, "onErrorResponse: error - " +error);
-                        Log.d(TAG, "onErrorResponse: error cause - " +error.getCause());
-                        String errorMsg = error.getMessage();
+
+                        if (response == null){
+                            Toast.makeText(LoginActivity.this, "Sorry can't login an account. Try again", Toast.LENGTH_LONG).show();
+                        }
                         if(response != null && response.data != null){
                             String errorString = new String(response.data);
-                            Log.i("log error", errorString);
-                            errorMsg = errorString;
-                            return;
+                            Toast.makeText(LoginActivity.this, errorString, Toast.LENGTH_LONG).show();
                         }
 
-                        if(response == null) {
-
-                            errorMsg = "Sorry can't login an account. Try again";
-                        }
-
-                        Toast.makeText(LoginActivity.this, "Error " + errorMsg, Toast.LENGTH_SHORT).show();
+//                        NetworkResponse response = error.networkResponse;
+//                        Log.d(TAG, "onErrorResponse: network response - "+response);
+//                        Log.d(TAG, "onErrorResponse: error - " +error);
+//
+//                        String errorMsg = error.getMessage();
+//                        if(response != null && response.data != null){
+//                            String errorString = new String(response.data);
+//                            Log.i("log error", errorString);
+//                            errorMsg = errorString;
+//                            return;
+//                        }
+//
+//                        if(response == null) {
+//
+//                            errorMsg = "Sorry can't login an account. Try again";
+//                        }
+//
+//                        Toast.makeText(LoginActivity.this, "Error " + errorMsg, Toast.LENGTH_SHORT).show();
                     }
                 }) {
 

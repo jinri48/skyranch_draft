@@ -1,10 +1,16 @@
 package com.example.elijah.skyranch_draft;
 
+import android.content.DialogInterface;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -43,6 +49,7 @@ public class Cart extends AppCompatActivity {
     private JSONObject mPlacedOrders;
 
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,8 +78,24 @@ public class Cart extends AppCompatActivity {
 //                Log.d(TAG, "onClick: " + placedOrders);
 //                tvSampData.setText(placedOrders);
                 if(mCartItems.size() > 0){
-                    // TODO: Add an alert dialog to confirm the order/s
-                    addOrder();
+                    AlertDialog.Builder builder = new AlertDialog.Builder(Cart.this);
+                    builder.setMessage("Are you sure you want to place your order?")
+                            .setCancelable(false)
+                            .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    addOrder();
+                                }
+                            })
+                            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                }
+                            });
+
+                    AlertDialog alert =  builder.create();
+                    alert.show();
                 }
 
             }
@@ -91,12 +114,15 @@ public class Cart extends AppCompatActivity {
                         mCartItems.clear();
                         mAdapter.notifyDataSetChanged();
                         tvCartPriceTotal.setText("Total: P" + String.format("%,.2f", mAdapter.getTotalItems(mCartItems)));
+
                     }
                 }
 
             }
         });
     }
+
+
 
     private void addOrder() {
         String url = AppConfig.ADD_CART_ITEMS;

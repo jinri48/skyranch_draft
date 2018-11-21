@@ -20,8 +20,9 @@
             android:layout_height="72dp"
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="24dp"
-            android:src="@drawable/skyranch"
+            android:src="@drawable/eklogo"
             android:contentDescription="logo"
+
             />
 
         <!-- Text Label -->
@@ -61,7 +62,9 @@
             android:layout_marginTop="24dp"
             android:layout_marginBottom="24dp"
             android:padding="12dp"
-            android:text="Login" />
+            android:text="Login"
+            android:textColor="#fff"
+            android:background="@color/colorAccent"/>
 
 
 

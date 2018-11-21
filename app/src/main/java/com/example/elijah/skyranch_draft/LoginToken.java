@@ -7,17 +7,19 @@ import android.os.Parcelable;
 import java.util.UUID;
 
 public class LoginToken implements Parcelable {
-    private static long num = 0;
+
     private String id;
     private String token;
     private String name;
+    private long branch;
 
 
 
-    public LoginToken(String id, String token, String name) {
+    public LoginToken(String id, String token, String name, long branch) {
         this.id = id;
         this.token = token;
         this.name = name;
+        this.branch = branch;
     }
 
     public String getId() {
@@ -46,6 +48,13 @@ public class LoginToken implements Parcelable {
     }
 
 
+    public long getBranch() {
+        return branch;
+    }
+
+    public void setBranch(long branch) {
+        this.branch = branch;
+    }
 
     @Override
     public String toString() {
@@ -53,6 +62,7 @@ public class LoginToken implements Parcelable {
                 "id='" + id + '\'' +
                 ", token='" + token + '\'' +
                 ", name='" + name + '\'' +
+                ", branch=" + branch +
                 '}';
     }
 
@@ -67,12 +77,14 @@ public class LoginToken implements Parcelable {
         dest.writeString(this.id);
         dest.writeString(this.token);
         dest.writeString(this.name);
+        dest.writeLong(this.branch);
     }
 
     protected LoginToken(Parcel in) {
         this.id = in.readString();
         this.token = in.readString();
         this.name = in.readString();
+        this.branch = in.readLong();
     }
 
     public static final Parcelable.Creator<LoginToken> CREATOR = new Parcelable.Creator<LoginToken>() {
@@ -86,7 +98,4 @@ public class LoginToken implements Parcelable {
             return new LoginToken[size];
         }
     };
-
-
-
 }

@@ -8,4 +8,6 @@
     <string name="sign_out">Sign out</string>
     <string name="app_label">Enchanted Kingdom</string>
     <string name="search_hint">Search Products</string>
+    <string name="section_shop">SHOP</string>
+    <string name="cart_label">Cart</string>
 </resources>

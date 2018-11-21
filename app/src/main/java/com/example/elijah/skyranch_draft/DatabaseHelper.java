@@ -3,6 +3,7 @@ package com.example.elijah.skyranch_draft;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -32,6 +33,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String KEY_ID = "_id";
     private static final String KEY_TOKEN = "token";
     private static final String KEY_NAME = "cce_name";
+    private static final String KEY_BRANCH =  "branch_id";
 
     //shopping cart table
     private static final String TABLE_CART = "cart";
@@ -72,7 +74,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String CREATE_TABLE_USERTOKEN = "CREATE TABLE " + TABLE_USERTOKENS + "("
                 + KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + KEY_TOKEN + " TEXT, "
-                + KEY_NAME + " TEXT"
+                + KEY_NAME + " TEXT, "
+                + KEY_BRANCH + " INTEGER"
                 +")";
 
         String CREATE_TABLE_CART = "CREATE TABLE "+TABLE_CART + "("
@@ -123,7 +126,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     LoginToken userToken =  new LoginToken(
                             cursor.getString(0),
                             cursor.getString(1),
-                            cursor.getString(2)
+                            cursor.getString(2),
+                            cursor.getInt(cursor.getColumnIndex(KEY_BRANCH))
                     );
 
                     userList.add(userToken);
@@ -155,6 +159,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             }
             values.put(KEY_TOKEN, userToken.getToken());
             values.put(KEY_NAME, userToken.getName());
+            values.put(KEY_BRANCH, userToken.getBranch());
             try {
                 result = db.insertOrThrow(TABLE_USERTOKENS, null, values);
 //                Toast.makeText(mContext, "user was added", Toast.LENGTH_SHORT).show();
@@ -171,7 +176,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 
     /*
-     * gets a single record of token
+     * gets a single record user by token
      * */
     public LoginToken getUserToken(String token) {
         SQLiteDatabase db = mDBInstance.getReadableDatabase();
@@ -185,13 +190,34 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             userToken = new LoginToken(
                     cursor.getString(0),
                     cursor.getString(1),
-                    cursor.getString(2)
+                    cursor.getString(2),
+                    cursor.getInt(cursor.getColumnIndex(KEY_BRANCH))
             );
         }
         cursor.close();
         Toast.makeText(mContext, userToken.toString(), Toast.LENGTH_LONG).show();
         return userToken;
     }
+
+    public LoginToken getUserToken() {
+        SQLiteDatabase db = mDBInstance.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_USERTOKENS
+                , null);
+
+        LoginToken userToken = null;
+        if (cursor.moveToFirst()){
+            userToken = new LoginToken(
+                    cursor.getString(0),
+                    cursor.getString(1),
+                    cursor.getString(2),
+                    cursor.getInt(cursor.getColumnIndex(KEY_BRANCH))
+            );
+        }
+        cursor.close();
+//        Toast.makeText(mContext, userToken.toString(), Toast.LENGTH_SHORT).show();
+        return userToken;
+    }
+
 
 
     public void deleteUsers() {
@@ -297,6 +323,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return itemsInCart;
     }
+
+    /*
+       Returns the number of items inside the cart
+     */
+    public long getCartCount(){
+        SQLiteDatabase db = this.getReadableDatabase();
+        long resultCount = DatabaseUtils.queryNumEntries(db, TABLE_CART);
+        db.close();
+        return resultCount;
+    }
+
+
     /*
     static List<Product> productItems = new ArrayList<>();
     static List<OrderItem> itemsInCart = new ArrayList<>();

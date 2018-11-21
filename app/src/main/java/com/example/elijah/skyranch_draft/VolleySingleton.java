@@ -1,13 +1,24 @@
 package com.example.elijah.skyranch_draft;
 
 import android.content.Context;
+import android.util.Log;
+import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.NetworkError;
+import com.android.volley.NetworkResponse;
+import com.android.volley.NoConnectionError;
+import com.android.volley.ParseError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.ServerError;
+import com.android.volley.TimeoutError;
+import com.android.volley.VolleyError;
 import com.android.volley.toolbox.Volley;
 
 public class VolleySingleton {
 
+    private static final String TAG = VolleySingleton.class.getSimpleName();
     private static VolleySingleton mInstance;
     private RequestQueue mRequestQueue;
     private static Context mCtx;
@@ -38,5 +49,33 @@ public class VolleySingleton {
         getRequestQueue().add(req);
     }
 
+    public static void showErrors(VolleyError error, Context context){
+        Log.d(TAG, "onErrorResponse: " +error);
+        error.printStackTrace();
 
+        String errorMsg = "";
+        if (error instanceof TimeoutError || error instanceof NoConnectionError) {
+            //This indicates that the request has either time out or there is no connection
+            errorMsg = "Timeout for connection exceeded. Can't connect to " +AppConfig.BASE_URL_API;
+        } else if (error instanceof AuthFailureError) {
+            //Error indicating that there was an Authentication Failure while performing the request
+            errorMsg = "Authentication Failed";
+            Log.d(TAG, "onErrorResponse: auth" );
+        } else if (error instanceof ServerError) {
+            //Indicates that the server responded with a error response
+            errorMsg =  "Server Error";
+            Log.d(TAG, "onErrorResponse: server" );
+        } else if (error instanceof NetworkError) {
+            //Indicates that there was network error while performing the request
+            errorMsg = "There was network error while performing the request. Please try again";
+            Log.d(TAG, "onErrorResponse: network" );
+        } else if (error instanceof ParseError) {
+            // Indicates that the server response could not be parsed
+            errorMsg = "Error encountered in loading the data. The server response could not be parsed";
+            Log.d(TAG, "onErrorResponse: parse" );
+        }
+
+        Toast.makeText(context, errorMsg, Toast.LENGTH_LONG).show();
+
+    }
 }
