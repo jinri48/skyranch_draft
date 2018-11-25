@@ -33,12 +33,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String KEY_ID = "_id";
     private static final String KEY_TOKEN = "token";
     private static final String KEY_NAME = "cce_name";
-    private static final String KEY_BRANCH =  "branch_id";
+    private static final String KEY_BRANCH = "branch_id";
 
     //shopping cart table
     private static final String TABLE_CART = "cart";
     private static final String KEY_CART_ID = "_cart_id";
-    private static final String KEY_CART_HEADER_ID = "_header_id" ;
+    private static final String KEY_CART_HEADER_ID = "_header_id";
     private static final String KEY_CART_PRO_ID = "pro_id";
     private static final String KEY_CART_QTY = "qty";
     private static final String KEY_CART_PRICE = "sub_total";
@@ -56,8 +56,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private Context mContext;
 
 
-    public static DatabaseHelper newInstance(Context context){
-        if (mDBInstance == null){
+    public static DatabaseHelper newInstance(Context context) {
+        if (mDBInstance == null) {
             mDBInstance = new DatabaseHelper(context.getApplicationContext());
         }
         return mDBInstance;
@@ -76,21 +76,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + KEY_TOKEN + " TEXT, "
                 + KEY_NAME + " TEXT, "
                 + KEY_BRANCH + " INTEGER"
-                +")";
+                + ")";
 
-        String CREATE_TABLE_CART = "CREATE TABLE "+TABLE_CART + "("
-                +KEY_CART_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-                +KEY_CART_HEADER_ID+ " INTEGER, "
-                +KEY_CART_PRO_ID + " INTEGER, "
-                +KEY_CART_PRO_NAME + " TEXT , "
-                +KEY_CART_PRO_IMG_URL+ " TEXT , "
-                +KEY_CART_PRO_RETAIL_PRICE+ " REAL , "
-                +KEY_CART_PRO_PART_NO + " TEXT , "
-                +KEY_CART_PRO_GROUP_NO+ " TEXT , "
-                +KEY_CART_PRO_STATUS+ " TEXT , "
-                +KEY_CART_QTY + " INTEGER, "
-                +KEY_CART_PRICE + " REAL"
-                +")";
+        String CREATE_TABLE_CART = "CREATE TABLE " + TABLE_CART + "("
+                + KEY_CART_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + KEY_CART_HEADER_ID + " INTEGER, "
+                + KEY_CART_PRO_ID + " INTEGER, "
+                + KEY_CART_PRO_NAME + " TEXT , "
+                + KEY_CART_PRO_IMG_URL + " TEXT , "
+                + KEY_CART_PRO_RETAIL_PRICE + " REAL , "
+                + KEY_CART_PRO_PART_NO + " TEXT , "
+                + KEY_CART_PRO_GROUP_NO + " TEXT , "
+                + KEY_CART_PRO_STATUS + " TEXT , "
+                + KEY_CART_QTY + " INTEGER, "
+                + KEY_CART_PRICE + " REAL"
+                + ")";
         try {
             db.execSQL(CREATE_TABLE_USERTOKEN);
             db.execSQL(CREATE_TABLE_CART);
@@ -114,16 +114,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 //    ---------USER TOKENS----------
 
-    public List<LoginToken> getAllUserTokens(){
+    public List<LoginToken> getAllUserTokens() {
         List<LoginToken> userList = new ArrayList<>();
         SQLiteDatabase db = mDBInstance.getReadableDatabase();
         String selectQuery = "SELECT * FROM " + TABLE_USERTOKENS;
 
-        if (db !=null){
+        if (db != null) {
             Cursor cursor = db.rawQuery(selectQuery, null);
             if (cursor.moveToFirst()) {
                 while (!cursor.isAfterLast()) {
-                    LoginToken userToken =  new LoginToken(
+                    LoginToken userToken = new LoginToken(
                             cursor.getString(0),
                             cursor.getString(1),
                             cursor.getString(2),
@@ -139,22 +139,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
 //        Toast.makeText(mContext, userList.toString() /*Arrays.toString(userList.toArray())*/, Toast.LENGTH_LONG).show();
 
-        return  userList;
+        return userList;
     }
 
     /*
      * adds a token in the database
      * */
 
-    public void addUserToken(LoginToken userToken){
-        long result= -1; // id of the row that was inserted
+    public void addUserToken(LoginToken userToken) {
+        long result = -1; // id of the row that was inserted
         SQLiteDatabase db = mDBInstance.getWritableDatabase();
 
-        if (db != null){
+        if (db != null) {
             ContentValues values = new ContentValues();
 
-            if (userToken.getId() != null){
-                Log.d(TAG, "addUserToken: "+userToken.getId());
+            if (userToken.getId() != null) {
+                Log.d(TAG, "addUserToken: " + userToken.getId());
                 values.put(KEY_ID, Long.parseLong(userToken.getId()));
             }
             values.put(KEY_TOKEN, userToken.getToken());
@@ -163,9 +163,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             try {
                 result = db.insertOrThrow(TABLE_USERTOKENS, null, values);
 //                Toast.makeText(mContext, "user was added", Toast.LENGTH_SHORT).show();
-                Log.d(TAG, "addUserToken: successfully added record id " +result);
+                Log.d(TAG, "addUserToken: successfully added record id " + result);
             } catch (SQLException e) {
-                Log.d(TAG, "addUserToken: error in adding " +e.getMessage());
+                Log.d(TAG, "addUserToken: error in adding " + e.getMessage());
                 e.printStackTrace();
             } finally {
                 db.close();
@@ -186,7 +186,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 , null);
 
         LoginToken userToken = null;
-        if (cursor.moveToFirst()){
+        if (cursor.moveToFirst()) {
             userToken = new LoginToken(
                     cursor.getString(0),
                     cursor.getString(1),
@@ -205,7 +205,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 , null);
 
         LoginToken userToken = null;
-        if (cursor.moveToFirst()){
+        if (cursor.moveToFirst()) {
             userToken = new LoginToken(
                     cursor.getString(0),
                     cursor.getString(1),
@@ -219,7 +219,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-
     public void deleteUsers() {
         SQLiteDatabase db = mDBInstance.getWritableDatabase();
         // Delete All Rows
@@ -231,13 +230,109 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 //    -------CART-------------
 
-    public long addToCart(OrderItem orderItem){
+    public long addToCart(OrderItem orderItem) {
+        long product_id = orderItem.getProduct().getId();
         long result = -1;
+
+        if (itemExistsQty(product_id) <= 0){
+            SQLiteDatabase db = mDBInstance.getWritableDatabase();
+            if (db != null) {
+                ContentValues values = new ContentValues();
+                values.put(KEY_CART_PRO_ID, orderItem.getProduct().getId());
+                values.put(KEY_CART_PRO_NAME, orderItem.getProduct().getName());
+                values.put(KEY_CART_PRO_GROUP_NO, orderItem.getProduct().getGroup_no());
+                values.put(KEY_CART_PRO_PART_NO, orderItem.getProduct().getPart_no());
+                values.put(KEY_CART_PRO_RETAIL_PRICE, orderItem.getProduct().getO_price());
+                values.put(KEY_CART_PRO_STATUS, String.valueOf(orderItem.getProduct().getStatus()));
+                values.put(KEY_CART_PRO_IMG_URL, orderItem.getProduct().getImgUrl());
+                values.put(KEY_CART_QTY, orderItem.getQty());
+                values.put(KEY_CART_PRICE, orderItem.getAmount());
+                try {
+                    result = db.insertOrThrow(TABLE_CART, null, values);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    Log.d(TAG, "addToCart: " + e.getMessage());
+                }finally {
+                    db.close();
+                }
+            }
+        }else{
+            long qty = itemExistsQty(product_id);
+            result =  updateCartItemByPro(orderItem, qty);
+        }
+
+        Toast.makeText(mContext,"Successfully added an item to cart",Toast.LENGTH_SHORT).show();
+        return result;
+}
+
+
+//    public boolean isCartItemExists(long pro_id) {
+//        boolean product_exists = false;
+//        SQLiteDatabase db = mDBInstance.getReadableDatabase();
+//        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_CART
+//                        + " WHERE " + KEY_CART_PRO_ID + " = ?"
+//                , new String[]{String.valueOf(pro_id)});
+//
+//        if (cursor.moveToFirst()) {
+//            product_exists = true;
+//        }
+//        Log.d(TAG, "isCartItemExists: " + product_exists);
+//        db.close();
+//        return product_exists;
+//    }
+
+    public long itemExistsQty(long pro_id) {
+        long qty = 0;
+        SQLiteDatabase db = mDBInstance.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_CART
+                        + " WHERE " + KEY_CART_PRO_ID + " = ?"
+                , new String[]{String.valueOf(pro_id)});
+
+        if (cursor.moveToFirst()) {
+           qty = cursor.getLong(cursor.getColumnIndex(KEY_CART_QTY));
+        }
+
+        db.close();
+        return qty;
+    }
+
+    /*
+     * Delete an item in the cart
+     * */
+    public int deleteItem(OrderItem orderItem) {
+        SQLiteDatabase db = mDBInstance.getWritableDatabase();
+        String whereClause = KEY_CART_ID + "=?";
+        String whereArgs[] = {String.valueOf(orderItem.getId())};
+        int numberOFEntriesDeleted = db.delete(TABLE_CART, whereClause, whereArgs);
+        return numberOFEntriesDeleted;
+    }
+
+    /*
+     *  Delete All Rows in the cart
+     * */
+
+
+    public int deleteAllItems() {
         SQLiteDatabase db = mDBInstance.getWritableDatabase();
 
-        if (db != null){
+        int result = db.delete(TABLE_CART, null, null);
+        db.close();
+        Log.d(TAG, "deleteAllItems result " + result);
+        return result;
+    }
+
+    /*
+     * 
+     *
+     * */
+    public int updateCartItem(OrderItem orderItem) {
+        int result = -1;
+        SQLiteDatabase db = mDBInstance.getWritableDatabase();
+
+        if (db != null) {
             ContentValues values = new ContentValues();
-            Log.d(TAG, "addToCart: orderitemVal" +orderItem);
+            Log.d(TAG, "UpdateCart: orderitemVal: " + orderItem);
+            Log.d(TAG, "updateCartItem: id " + orderItem.getId());
 
             values.put(KEY_CART_PRO_ID, orderItem.getProduct().getId());
             values.put(KEY_CART_PRO_NAME, orderItem.getProduct().getName());
@@ -250,50 +345,74 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             values.put(KEY_CART_PRICE, orderItem.getAmount());
 
             try {
-                result = db.insertOrThrow(TABLE_CART, null, values);
+                result = db.update(TABLE_CART, values, KEY_CART_ID + " = ?",
+                        new String[]{String.valueOf(orderItem.getId())});
             } catch (SQLException e) {
                 e.printStackTrace();
-                Log.d(TAG, "addToCart: "+e.getMessage());
-            }finally {
+                Log.d(TAG, "addToCart: " + e.getMessage());
+            } finally {
                 db.close();
             }
         }
 
-        Toast.makeText(mContext, "Successfully added an item to cart", Toast.LENGTH_SHORT).show();
         return result;
     }
 
-    /*
-     * Delete an item in the cart
-     * */
-    public int deleteItem(OrderItem orderItem) {
+    public int updateCartItemQty(OrderItem orderItem) {
+        int result = -1;
         SQLiteDatabase db = mDBInstance.getWritableDatabase();
-        String whereClause = KEY_CART_ID +"=?";
-        String whereArgs[] = {String.valueOf(orderItem.getId())};
-        int numberOFEntriesDeleted = db.delete(TABLE_CART, whereClause, whereArgs);
-        return numberOFEntriesDeleted;
+
+        if (db != null) {
+            ContentValues values = new ContentValues();
+            Log.d(TAG, "UpdateCart: orderitemVal: " + orderItem);
+            Log.d(TAG, "updateCartItem: id " + orderItem.getId());
+            values.put(KEY_CART_QTY, orderItem.getQty());
+            values.put(KEY_CART_PRICE, orderItem.getAmount());
+            try {
+                result = db.update(TABLE_CART, values, KEY_CART_ID + " = ?",
+                        new String[]{String.valueOf(orderItem.getId())});
+            } catch (SQLException e) {
+                e.printStackTrace();
+                Log.d(TAG, "addToCart: " + e.getMessage());
+            } finally {
+                db.close();
+            }
+        }
+
+        return result;
     }
 
-    /*
-     *  Delete All Rows in the cart
-     * */
-
-    public int deleteAllItems(){
+    public int updateCartItemByPro(OrderItem orderItem, long last_qty) {
+        int result = -1;
         SQLiteDatabase db = mDBInstance.getWritableDatabase();
 
-        int result = db.delete(TABLE_CART, null, null);
-        db.close();
-        Log.d(TAG, "deleteAllItems result " +result);
+        if (db != null) {
+            ContentValues values = new ContentValues();
+            long qty = orderItem.getQty() + last_qty;
+            double price = orderItem.getProduct().getO_price() * qty;
+            values.put(KEY_CART_QTY, qty);
+            values.put(KEY_CART_PRICE, price);
+            try {
+                result = db.update(TABLE_CART, values, KEY_CART_PRO_ID + " = ?",
+                        new String[]{String.valueOf(orderItem.getProduct().getId())});
+            } catch (SQLException e) {
+                e.printStackTrace();
+                Log.d(TAG, "addToCart: " + e.getMessage());
+            } finally {
+                db.close();
+            }
+        }
+
         return result;
     }
 
 
-    public ArrayList<OrderItem> getCart(){
+    public ArrayList<OrderItem> getCart() {
         ArrayList<OrderItem> itemsInCart = new ArrayList<>();
         SQLiteDatabase db = mDBInstance.getReadableDatabase();
         String selectQuery = "SELECT * FROM " + TABLE_CART;
 
-        if (db !=null){
+        if (db != null) {
             Cursor cursor = db.rawQuery(selectQuery, null);
             if (cursor.moveToFirst()) {
                 while (!cursor.isAfterLast()) {
@@ -327,7 +446,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     /*
        Returns the number of items inside the cart
      */
-    public long getCartCount(){
+    public long getCartCount() {
         SQLiteDatabase db = this.getReadableDatabase();
         long resultCount = DatabaseUtils.queryNumEntries(db, TABLE_CART);
         db.close();
