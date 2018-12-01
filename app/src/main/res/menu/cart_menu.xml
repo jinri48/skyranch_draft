@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/switchId"
+        android:title="no receipt"
+        app:showAsAction="always"
+        android:actionLayout="@layout/switch_no_receipt"/>
+    <!--<item-->
+        <!--android:id="@+id/switchLoyalty"-->
+        <!--android:title="No loyalty"-->
+        <!--app:showAsAction="ifRoom"-->
+        <!--android:actionLayout="@layout/switch_no_loyalty"/>-->
+
+</menu>

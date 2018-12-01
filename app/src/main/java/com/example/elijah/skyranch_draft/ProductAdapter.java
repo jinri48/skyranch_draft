@@ -14,6 +14,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.elijah.skyranch_draft.activity.CustomerActivity;
 import com.squareup.picasso.Picasso;
 
 import java.lang.ref.WeakReference;
@@ -150,6 +151,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
                     order.setQty(Long.parseLong(mQty.getText().toString()));
                     order.setAmount(price);
                     order.setProduct(item);
+
                     Log.d(TAG, "onClick: " +item);
                     Log.d(TAG, "onClick: order " +order);
                     mDBHelper.addToCart(order);

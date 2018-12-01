@@ -38,14 +38,19 @@ import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.example.elijah.skyranch_draft.activity.PrintActivity;
+import com.example.elijah.skyranch_draft.activity.SettingActivity;
+import com.miguelcatalan.materialsearchview.MaterialSearchView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
-public class ProductActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
+public class ProductActivity extends AppCompatActivity {
 
     private static final String TAG = ProductActivity.class.getSimpleName();
     private RecyclerView mRecyclerView;
@@ -59,47 +64,22 @@ public class ProductActivity extends AppCompatActivity implements SearchView.OnQ
     private ProgressBar progressBar;
     GridLayoutManager gridLayoutManager;
 
-    private String mQuery =""; // query for search view
+    private String mQuery = ""; // query for search view
     private SearchView mSearchView;
+
+    MaterialSearchView materialSearchView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.product_activity);
-
         initObj();
 
-//        LoginToken user = mDBHelper.getUserToken();
-//        // redirect to login page
-//        if (user == null){
-//            Log.d(TAG, "onCreate: user is null");
-//            Intent intent = new Intent(ProductActivity.this, LoginActivity.class);
-//            startActivity(intent);
-//        }
-
-        Intent intent = getIntent();
-        // Get the intent, verify the action and get the query
-        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
-            mQuery = intent.getStringExtra(SearchManager.QUERY);
-            Log.d(TAG, "onNewIntent: " +mQuery);
-        }
-
-        // show the first page
-        getAllProducts(1, mQuery);
-
-        scrollListener = new EndlessRecyclerViewScrollListener(gridLayoutManager) {
-            @Override
-            public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
-                showProgressView();
-                getAllProducts(page +1, mQuery);
-
-            }
-        };
-        mRecyclerView.addOnScrollListener(scrollListener);
     }
 
 
-    private void initObj(){
-        Toolbar myToolbar = findViewById(R.id.my_toolbar);
+    private void initObj() {
+        final Toolbar myToolbar = findViewById(R.id.my_toolbar);
         myToolbar.setTitle(R.string.section_shop);
         setSupportActionBar(myToolbar);
 
@@ -111,7 +91,6 @@ public class ProductActivity extends AppCompatActivity implements SearchView.OnQ
         mRecyclerView = (RecyclerView) findViewById(R.id.rv_products);
         mListItems = new ArrayList<>();
 
-
         // make your container displayed in a linear way
         // LinearLayoutManager llm = new LinearLayoutManager(this);
         // llm.setOrientation(LinearLayoutManager.VERTICAL);
@@ -121,6 +100,58 @@ public class ProductActivity extends AppCompatActivity implements SearchView.OnQ
         mRecyclerView.addItemDecoration(new GridSpacingItemDecoration(2, dpToPx(10), true));
         mAdapter = new ProductAdapter(ProductActivity.this, mListItems);
         mRecyclerView.setAdapter(mAdapter);
+        showProgressView();
+        getAllProducts(1, "");
+        materialSearchView = findViewById(R.id.sampleSearch);
+        materialSearchView.setOnSearchViewListener(new MaterialSearchView.SearchViewListener() {
+            @Override
+            public void onSearchViewShown() {
+
+            }
+
+            @Override
+            public void onSearchViewClosed() {
+                mQuery = "";
+                mListItems.clear();
+                mAdapter.notifyDataSetChanged();
+                getAllProducts(1, "");
+                Log.d(TAG, "onSearchViewClosed: " +mListItems);
+            }
+        });
+        materialSearchView.setOnQueryTextListener(new MaterialSearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                if (query != null && !query.isEmpty()){
+                    Log.d(TAG, "onQueryTextSubmit: not null or empty" );
+                    mQuery = query;
+                    mListItems.clear();
+                    mAdapter.notifyDataSetChanged();
+                    getAllProducts(1, mQuery);
+                }
+                Log.d(TAG, "onQueryTextSubmit: " +query);
+
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if (newText != null && !newText.isEmpty()){
+                    Log.d(TAG, "onQueryTextChange: " +newText);
+                }
+                return true;
+            }
+        });
+
+        scrollListener = new EndlessRecyclerViewScrollListener(gridLayoutManager) {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
+                showProgressView();
+                getAllProducts(page + 1, mQuery);
+
+            }
+        };
+        mRecyclerView.addOnScrollListener(scrollListener);
+
 
     }
 
@@ -128,41 +159,9 @@ public class ProductActivity extends AppCompatActivity implements SearchView.OnQ
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.shop_menu, menu);
+        MenuItem searchingSamp =  menu.findItem(R.id.action_search_sample);
+        materialSearchView.setMenuItem(searchingSamp);
 
-        MenuItem search = menu.findItem(R.id.action_search);
-        mSearchView = (SearchView) search.getActionView();
-        setupSearchView(search);
-        if (mQuery != null || mQuery == "") {
-            Log.d(TAG, "onCreateOptionsMenu: mquery is not null,  value is" +mQuery);
-            mSearchView.setQuery(mQuery, false);
-            mSearchView.setIconifiedByDefault(false);
-        }
-
-    //        search.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
-    //
-    //            @Override
-    //            public boolean onMenuItemActionExpand(MenuItem item) {
-    //                // Do whatever you need
-    //                Log.d(TAG, "onMenuItemActionExpand: ");
-    //                return true; // KEEP IT TO TRUE OR IT DOESN'T OPEN !!
-    //            }
-    //
-    //            @Override
-    //            public boolean onMenuItemActionCollapse(MenuItem item) {
-    //                Log.d(TAG, "onMenuItemActionCollapse: ");
-    //                if (mQuery == null){
-    //                    Log.d(TAG, "onMenuItemActionCollapse: null" );
-    ////                    Intent intent = new Intent(ProductActivity.this, ProductActivity.class);
-    ////                    intent.setAction(Intent.ACTION_SEARCH);
-    ////                    intent.putExtra(SearchManager.QUERY, "");
-    ////                    Log.d(TAG, "onQueryTextSubmit: gonna start activity with the query none" );
-    ////                    startActivity(intent);
-    //                }
-    //
-    //                // Do whatever you need
-    //                return true; // OR FALSE IF YOU DIDN'T WANT IT TO CLOSE!
-    //            }
-    //        });
         return true;
     }
 
@@ -176,7 +175,17 @@ public class ProductActivity extends AppCompatActivity implements SearchView.OnQ
                 return true;
 
             case R.id.action_signout:
-              signingOut();
+                signingOut();
+                return true;
+
+            case R.id.action_settings:
+                intent = new Intent(this, SettingActivity.class);
+                startActivity(intent);
+                return true;
+
+            case R.id.action_testprint:
+                intent = new Intent(this, PrintActivity.class);
+                startActivity(intent);
                 return true;
 
             default:
@@ -188,23 +197,23 @@ public class ProductActivity extends AppCompatActivity implements SearchView.OnQ
     }
 
     /*--------dialog before signing out--------------*/
-    private void signingOut(){
+    private void signingOut() {
         long itemsCountInCart = mDBHelper.getCartCount();
-        Log.d(TAG, "onOptionsItemSelected:  itemsCountInCart " +itemsCountInCart);
-        if (itemsCountInCart > 0){
+        Log.d(TAG, "onOptionsItemSelected:  itemsCountInCart " + itemsCountInCart);
+        if (itemsCountInCart > 0) {
             AlertDialog.Builder builder = new AlertDialog.Builder(ProductActivity.this);
-            builder .setTitle("Warning")
+            builder.setTitle("Warning")
                     .setMessage("All items in your cart will be deleted when signing out without placing your order. Do you want to proceed?")
                     .setCancelable(false)
                     .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                         mDBHelper.deleteUsers(); // remove the current logged in user
-                         mDBHelper.deleteAllItems(); // delete the temp cart items
-                         session.setLogin(false);
-                         finish();
-                         Intent intent = new Intent(ProductActivity.this, LoginActivity.class);
-                         startActivity(intent);
+                            mDBHelper.deleteUsers(); // remove the current logged in user
+                            mDBHelper.deleteAllItems(); // delete the temp cart items
+                            session.setLogin(false);
+                            finish();
+                            Intent intent = new Intent(ProductActivity.this, LoginActivity.class);
+                            startActivity(intent);
                         }
                     })
                     .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -213,9 +222,9 @@ public class ProductActivity extends AppCompatActivity implements SearchView.OnQ
                             dialog.dismiss();
                         }
                     });
-            AlertDialog alert =  builder.create();
+            AlertDialog alert = builder.create();
             alert.show();
-        }else {
+        } else {
             mDBHelper.deleteUsers();
             session.setLogin(false);
             finish();
@@ -224,7 +233,6 @@ public class ProductActivity extends AppCompatActivity implements SearchView.OnQ
         }
 
     }
-
 
 
     /*------------Set up Progress bar visibility -----------------*/
@@ -237,28 +245,28 @@ public class ProductActivity extends AppCompatActivity implements SearchView.OnQ
     }
 
     /*------------Set up Search view -----------------*/
-    private void setupSearchView(MenuItem searchItem){
-        mSearchView.setIconifiedByDefault(false);
-        mSearchView.setOnQueryTextListener(this);
-        mSearchView.setFocusable(false);
-        mSearchView.setFocusableInTouchMode(false);
-    }
+//    private void setupSearchView(MenuItem searchItem) {
+//        mSearchView.setIconifiedByDefault(false);
+//        mSearchView.setOnQueryTextListener(this);
+//        mSearchView.setFocusable(false);
+//        mSearchView.setFocusableInTouchMode(false);
+//    }
 
-    @Override
-    public boolean onQueryTextSubmit(String s) {
-        Intent intent = new Intent(ProductActivity.this, ProductActivity.class);
-        intent.setAction(Intent.ACTION_SEARCH);
-        intent.putExtra(SearchManager.QUERY, s);
-        Log.d(TAG, "onQueryTextSubmit: gonna start activity with the query " +s);
-        startActivity(intent);
-        return false;
-    }
-
-    @Override
-    public boolean onQueryTextChange(String s) {
-        Log.d(TAG, "onQueryTextChange: " +s);
-        return false;
-    }
+//    @Override
+//    public boolean onQueryTextSubmit(String s) {
+//        Intent intent = new Intent(ProductActivity.this, ProductActivity.class);
+//        intent.setAction(Intent.ACTION_SEARCH);
+//        intent.putExtra(SearchManager.QUERY, s);
+//        Log.d(TAG, "onQueryTextSubmit: gonna start activity with the query " + s);
+//        startActivity(intent);
+//        return false;
+//    }
+//
+//    @Override
+//    public boolean onQueryTextChange(String s) {
+//        Log.d(TAG, "onQueryTextChange: " + s);
+//        return false;
+//    }
 
     /*--------- HANDLE REQUESTS API TO TEXT VIEW ------------*/
 //    private void parseJSON() {
@@ -322,40 +330,46 @@ public class ProductActivity extends AppCompatActivity implements SearchView.OnQ
 //    }
 
     private void getAllProducts(int page_num, String search_item) {
-        LoginToken user = mDBHelper.getUserToken();
+        final LoginToken user = mDBHelper.getUserToken();
         // redirect to login page
-        if (user == null){
+        if (user == null) {
             Log.d(TAG, "getAllProducts: user is null");
             Intent intent = new Intent(ProductActivity.this, LoginActivity.class);
             startActivity(intent);
-        }else{
-            Log.d(TAG, "getAllProducts: user " +user);
+        } else {
+            Log.d(TAG, "getAllProducts: user " + user);
             showProgressView();
             String url = AppConfig.GET_PRODUCTS_BY_BRANCH;
             String params = "?page=" + page_num
                     + "&arnoc=" + String.valueOf(user.getBranch())
-                    + "&search_value=" +search_item
-                    + "&token=" + user.getToken()
+                    + "&search_value=" + search_item
+//                    + "&token=" + user.getToken()
                     ;
-            url = url+params;
-            Log.d(TAG, "getAllProducts: url" +url);
+            url = url + params;
+            Log.d(TAG, "getAllProducts: url" + url);
             JsonObjectRequest jObjreq = new JsonObjectRequest(Request.Method.GET, url, null,
                     new Response.Listener<JSONObject>() {
                         @Override
                         public void onResponse(JSONObject response) {
-                            Log.d(TAG, "onResponse: " +response);
+//                            Log.d(TAG, "onResponse: " + response);
                             try {
-                                if (response.getBoolean("success") == false){
-                                    if (response.getInt("status") == 401){
+                                if (response.getBoolean("success") == false) {
+                                    if (response.getInt("status") == 401) {
+                                        /*
+                                         * TODO: make a dialog that the user is not currently on duty
+                                         * */
+
                                         finish();
                                         session.setLogin(false);
                                         mDBHelper.deleteUsers();
+                                        mDBHelper.deleteAllItems();
+
                                         Intent intent = new Intent(ProductActivity.this, LoginActivity.class);
                                         startActivity(intent);
                                     }
                                 }
+                                if (response.getInt("status") == 200) {
 
-                                if(response.getInt("status") == 200) {
                                     JSONObject data = response.getJSONObject("data");
                                     JSONArray products = data.getJSONArray("data");
 
@@ -377,12 +391,11 @@ public class ProductActivity extends AppCompatActivity implements SearchView.OnQ
                                         );
                                         mListItems.add(product);
                                     }
-
                                 }
                                 hideProgressView();
                                 mAdapter.notifyDataSetChanged();
 //                            Log.d(TAG, "onResponse: " +mListItems.toString());
-//                            Log.d(TAG, "onResponse: listpro : " +mListItems);
+                            Log.d(TAG, "onResponse: listpro : " +mListItems);
 
                             } catch (JSONException e) {
                                 e.printStackTrace();
@@ -395,16 +408,21 @@ public class ProductActivity extends AppCompatActivity implements SearchView.OnQ
                 public void onErrorResponse(VolleyError error) {
                     VolleySingleton.showErrors(error, ProductActivity.this);
                     NetworkResponse response = error.networkResponse;
-                    if(response != null && response.data != null){
+                    if (response != null && response.data != null) {
                         String errorString = new String(response.data);
                         Toast.makeText(ProductActivity.this, errorString, Toast.LENGTH_LONG).show();
                     }
                 }
-            });
+            }) {
+                @Override
+                public Map<String, String> getHeaders() throws AuthFailureError {
+                    Map<String, String> params = new HashMap<String, String>();
+                    params.put("token", user.getToken());
+                    return params;
+                }
+            };
             mRequestQ.add(jObjreq);
         }
-
-
 
 
     }
@@ -498,4 +516,7 @@ public class ProductActivity extends AppCompatActivity implements SearchView.OnQ
 //            mListItems.clear();
 //        }
     }
+
+
 }
+

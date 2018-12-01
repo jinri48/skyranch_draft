@@ -11,5 +11,7 @@ public class AppConfig {
     public static final String ADD_CART_ITEMS = BASE_URL_API + "/addOrder";
     public static final String GET_PRODUCTS_BY_BRANCH = BASE_URL_API + "/sitepartsBranch";
 
-//    public static final String LOGINOUT = BASE_URL_API+"/logout";
+    public static final String GET_CUSTOMERS = BASE_URL_API + "/getCustomer";
+    public static final String ADD_CUSTOMER = BASE_URL_API + "/newCustomer";
+
 }

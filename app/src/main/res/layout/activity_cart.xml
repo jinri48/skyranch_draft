@@ -4,13 +4,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:id="@+id/layout_linear"
     tools:context=".Cart">
 
     <TextView
         android:id="@+id/tvCartData"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-
         android:layout_gravity="center|bottom"
         android:layout_marginTop="20dp"
         android:layout_weight="0"
@@ -29,7 +29,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:scrollbars="vertical"></android.support.v7.widget.RecyclerView>
+        android:scrollbars="vertical"
+
+        ></android.support.v7.widget.RecyclerView>
 
     <TextView
         android:id="@+id/tvCartPriceTotal"

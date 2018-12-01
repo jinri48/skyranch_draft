@@ -12,8 +12,11 @@
     <color name="colorPrimary">#1db954</color>
     <color name="colorPrimaryDark">#179443</color>
     <color name="colorAccent">#531DB9</color>
+    <color name="colorAccentSecondary">#B91D82</color>
     <color name="viewBg">#fff</color>
+    <color name="light"></color>
     <color name="gray">#4c4c4c</color>
     <color name="activityBackground">#121212</color>
 
+    <color name="white1">#33ffffff</color>
 </resources>

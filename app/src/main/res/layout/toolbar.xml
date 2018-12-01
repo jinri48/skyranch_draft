@@ -1,14 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/my_toolbar"
+    android:id="@+id/toolbar_container"
     android:layout_width="match_parent"
-    android:layout_height="?attr/actionBarSize"
-    android:background="?attr/colorPrimary"
-    android:elevation="4dp"
-    android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
-    app:layout_collapseMode="pin"
-    app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-    app:titleTextColor="#ffffff">
+    android:layout_height="wrap_content"
+    app:layout_collapseMode="pin">
 
-</android.support.v7.widget.Toolbar>
+    <!--<android.support.v7.widget.Toolbar-->
+        <!--android:id="@+id/my_toolbar"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="?attr/actionBarSize"-->
+        <!--android:background="@color/colorPrimary"-->
+        <!--app:titleTextColor="#ffffff"-->
+        <!--app:layout_collapseMode="pin"/>-->
+
+    <!--<com.miguelcatalan.materialsearchview.MaterialSearchView-->
+        <!--android:id="@+id/sampleSearch"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content" />-->
+</RelativeLayout>
+
+<!--original-->
+
+<!--<android.support.v7.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"-->
+<!--xmlns:app="http://schemas.android.com/apk/res-auto"-->
+<!--android:id="@+id/my_toolbar"-->
+<!--android:layout_width="match_parent"-->
+<!--android:layout_height="?attr/actionBarSize"-->
+<!--android:background="?attr/colorPrimary"-->
+<!--android:elevation="4dp"-->
+<!--android:theme="@style/ThemeOverlay.AppCompat.ActionBar"-->
+<!--app:layout_collapseMode="pin"-->
+<!--app:popupTheme="@style/ThemeOverlay.AppCompat.Light"-->
+<!--app:titleTextColor="#ffffff">-->
+
+<!--</android.support.v7.widget.Toolbar>-->

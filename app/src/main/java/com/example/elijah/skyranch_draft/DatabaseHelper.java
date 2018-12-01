@@ -322,7 +322,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     /*
-     * 
+     *
      *
      * */
     public int updateCartItem(OrderItem orderItem) {
