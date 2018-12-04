@@ -220,16 +220,14 @@ public class Cart extends BaseActivity {
                 long result = data.getLongExtra("customer_id",  -1);
                 if (result > -1){
                    customer_id = result;
-                   addOrder();
-                    Toast.makeText(Cart.this, "cart " +result, Toast.LENGTH_SHORT).show();
+                    addOrder();
                     //clean up list
                     // print
 
                 }
-
             }
             if (resultCode == RESULT_CANCELED) {
-//                mTextViewResult.setText("Nothing selected");
+                customer_id = -1;
             }
         }
     }

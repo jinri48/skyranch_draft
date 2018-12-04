@@ -2,7 +2,7 @@ package com.example.elijah.skyranch_draft;
 
 public class AppConfig {
 
-    public static final String BASE_URL_API = "http://172.16.12.112:8000/api";
+    public static final String BASE_URL_API = "http://172.16.12.117:8000/api";
 
     //    routes
     public static final String LOGIN = BASE_URL_API + "/login";
@@ -13,5 +13,6 @@ public class AppConfig {
 
     public static final String GET_CUSTOMERS = BASE_URL_API + "/getCustomer";
     public static final String ADD_CUSTOMER = BASE_URL_API + "/newCustomer";
+    public static final String PHONE_EXISTS = BASE_URL_API + "/phoneExist";
 
 }

@@ -59,6 +59,11 @@ public class CustomerAdapter extends RecyclerView.Adapter<CustomerAdapter.Custom
         notifyDataSetChanged();
     }
 
+    public void setSelectedItem(int position){
+        sSelected = position;
+    }
+
+
     public void setOnItemClickListener(SingleClickItemListener clickListener) {
         sClickListener = clickListener;
     }

@@ -10,14 +10,14 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
-        android:elevation="4dp"
+
         />
 
     <com.miguelcatalan.materialsearchview.MaterialSearchView
         android:id="@+id/cust_search"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/search_hint"
+        android:hint="@string/hint_search_cust"
         app:searchBackground="@color/colorPrimary"
         android:textColor="@android:color/white"
         android:textColorHint="@android:color/white"/>

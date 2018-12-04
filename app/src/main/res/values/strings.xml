@@ -10,9 +10,11 @@
     <string name="search_hint">Search Products</string>
     <string name="section_shop">SHOP</string>
     <string name="cart_label">Cart</string>
+
     <string name="hint_lname">Last Name</string>
     <string name="hint_fname">First Name</string>
     <string name="hint_mobile">Mobile Number</string>
+    <string name="hint_bday">Birthday</string>
     <string name="hint_email">Email</string>
     <string name="add_account">Add Customer</string>
     <string name="cancel">Cancel</string>
@@ -38,6 +40,19 @@
     <string name="toast_7"> Only a single Qr code is printed for the AIDL mode</string>
     <string name="toast_8">Now QrCode size must be less than 7!</string>
     <string name="toast_9">BarCode type or conent error!</string>
-    <string name="hint_bday">Birthday</string>
+
+
     <string name="confirm_selected">Confirm Selected Customer</string>
+    
+    <!--add customer validation-->
+    <string name="err_lname">Please provide a lastname</string>
+    <string name="err_fname">Please provide a first name</string>
+    <string name="err_bday">Please provide a birthday</string>
+    <string name="err_mobile">Please provide a valid mobile number</string>
+    <string name="err_mobile2">Phone number already exists</string>
+    <string name="err_email">Please provide a valid email</string>
+    <string name="err_bday2">Age must not be less than 3yrs old</string>
+
+    <string name="hint_search_cust">Customer Name/Mobile</string>
+    
 </resources>

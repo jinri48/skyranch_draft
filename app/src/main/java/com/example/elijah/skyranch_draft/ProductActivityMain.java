@@ -1,7 +1,6 @@
 package com.example.elijah.skyranch_draft;
 
 
-import android.app.SearchManager;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -12,7 +11,6 @@ import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
@@ -26,15 +24,10 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
-import com.android.volley.NetworkError;
 import com.android.volley.NetworkResponse;
-import com.android.volley.NoConnectionError;
-import com.android.volley.ParseError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
-import com.android.volley.ServerError;
-import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
@@ -50,9 +43,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ProductActivity extends AppCompatActivity {
+public class ProductActivityMain extends AppCompatActivity {
 
-    private static final String TAG = ProductActivity.class.getSimpleName();
+    private static final String TAG = ProductActivityMain.class.getSimpleName();
     private RecyclerView mRecyclerView;
     private ProductAdapter mAdapter;
     private ArrayList<Product> mListItems; // storage var for our JSON
@@ -99,7 +92,7 @@ public class ProductActivity extends AppCompatActivity {
         gridLayoutManager = new GridLayoutManager(this, 2);
         mRecyclerView.setLayoutManager(gridLayoutManager);
         mRecyclerView.addItemDecoration(new GridSpacingItemDecoration(2, dpToPx(10), true));
-        mAdapter = new ProductAdapter(ProductActivity.this, mListItems);
+        mAdapter = new ProductAdapter(ProductActivityMain.this, mListItems);
         mRecyclerView.setAdapter(mAdapter);
 
         getAllProducts(1, mQuery);
@@ -201,7 +194,7 @@ public class ProductActivity extends AppCompatActivity {
         long itemsCountInCart = mDBHelper.getCartCount();
         Log.d(TAG, "onOptionsItemSelected:  itemsCountInCart " + itemsCountInCart);
         if (itemsCountInCart > 0) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(ProductActivity.this);
+            AlertDialog.Builder builder = new AlertDialog.Builder(ProductActivityMain.this);
             builder.setTitle("Warning")
                     .setMessage("All items in your cart will be deleted when signing out without placing your order. Do you want to proceed?")
                     .setCancelable(false)
@@ -212,7 +205,7 @@ public class ProductActivity extends AppCompatActivity {
                             mDBHelper.deleteAllItems(); // delete the temp cart items
                             session.setLogin(false);
                             finish();
-                            Intent intent = new Intent(ProductActivity.this, LoginActivity.class);
+                            Intent intent = new Intent(ProductActivityMain.this, LoginActivity.class);
                             startActivity(intent);
                         }
                     })
@@ -228,7 +221,7 @@ public class ProductActivity extends AppCompatActivity {
             mDBHelper.deleteUsers();
             session.setLogin(false);
             finish();
-            Intent intent = new Intent(ProductActivity.this, LoginActivity.class);
+            Intent intent = new Intent(ProductActivityMain.this, LoginActivity.class);
             startActivity(intent);
         }
 
@@ -334,7 +327,7 @@ public class ProductActivity extends AppCompatActivity {
         // redirect to login page
         if (user == null) {
             Log.d(TAG, "getAllProducts: user is null");
-            Intent intent = new Intent(ProductActivity.this, LoginActivity.class);
+            Intent intent = new Intent(ProductActivityMain.this, LoginActivity.class);
             startActivity(intent);
         } else {
             Log.d(TAG, "getAllProducts: user " + user);
@@ -363,7 +356,7 @@ public class ProductActivity extends AppCompatActivity {
                                         mDBHelper.deleteUsers();
                                         mDBHelper.deleteAllItems();
 
-                                        Intent intent = new Intent(ProductActivity.this, LoginActivity.class);
+                                        Intent intent = new Intent(ProductActivityMain.this, LoginActivity.class);
                                         startActivity(intent);
                                     }
                                 }
@@ -405,11 +398,11 @@ public class ProductActivity extends AppCompatActivity {
                     }, new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError error) {
-                    VolleySingleton.showErrors(error, ProductActivity.this);
+                    VolleySingleton.showErrors(error, ProductActivityMain.this);
                     NetworkResponse response = error.networkResponse;
                     if (response != null && response.data != null) {
                         String errorString = new String(response.data);
-                        Toast.makeText(ProductActivity.this, errorString, Toast.LENGTH_LONG).show();
+                        Toast.makeText(ProductActivityMain.this, errorString, Toast.LENGTH_LONG).show();
                     }
                 }
             }) {

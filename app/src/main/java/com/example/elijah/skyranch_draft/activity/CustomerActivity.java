@@ -1,16 +1,20 @@
 package com.example.elijah.skyranch_draft.activity;
 
+import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.telephony.PhoneNumberUtils;
+import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -20,27 +24,35 @@ import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
+import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.example.elijah.skyranch_draft.AppConfig;
 import com.example.elijah.skyranch_draft.Cart;
 import com.example.elijah.skyranch_draft.Customer;
 import com.example.elijah.skyranch_draft.CustomerAdapter;
 import com.example.elijah.skyranch_draft.DatabaseHelper;
+import com.example.elijah.skyranch_draft.EndlessRecyclerViewScrollListener;
 import com.example.elijah.skyranch_draft.Interface.SingleClickItemListener;
 import com.example.elijah.skyranch_draft.LoginActivity;
 import com.example.elijah.skyranch_draft.LoginToken;
 import com.example.elijah.skyranch_draft.MainActivity;
+import com.example.elijah.skyranch_draft.Product;
+import com.example.elijah.skyranch_draft.ProductActivity;
 import com.example.elijah.skyranch_draft.R;
 import com.example.elijah.skyranch_draft.SessionManager;
 import com.example.elijah.skyranch_draft.VolleySingleton;
+import com.google.android.gms.common.util.DataUtils;
 import com.miguelcatalan.materialsearchview.MaterialSearchView;
 
 import org.json.JSONArray;
@@ -55,6 +67,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class CustomerActivity extends AppCompatActivity implements SingleClickItemListener {
     private static final String TAG = CustomerActivity.class.getSimpleName();
@@ -65,10 +79,25 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
     private ArrayList<Customer> mCustList;
     private CustomerAdapter mCustAdapter;
     private Customer mSelectedCustomer;
-    private EditText bday;
+
 
     MaterialSearchView searchViewCust;
     ProgressDialog progressDialog;
+
+    // custom dialog widgets
+    private AlertDialog dialog;
+    ProgressDialog prgDialog;
+    private EditText bday, input_lname, input_fname, input_mobile, input_email;
+    private TextInputLayout layout_lname, layout_fname, layout_email, layout_mobile, layout_bday;
+
+    // isPhone Exists
+    private boolean isPhoneExists;
+    private RequestQueue mRequestQ;
+    private String mQuery = "";
+    private EndlessRecyclerViewScrollListener scrollListener;
+    private ProgressBar progressBar;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,32 +108,43 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
 
         mDBHelper = DatabaseHelper.newInstance(this);
         session = new SessionManager(this);
+        mRequestQ = Volley.newRequestQueue(this);
+
 
         mCustList = new ArrayList<>();
-        progressDialog = new ProgressDialog(this);
-        progressDialog.setMessage("Loading... Please wait");
-        progressDialog.setIndeterminate(false);
-        progressDialog.setCancelable(false);
-        progressDialog.show();
 
-        getCustList("");
+        
+        progressBar = findViewById(R.id.pbCust); 
+        getCustList(mQuery, 1);
 
         mRv_Cust = findViewById(R.id.rvCustCustom);
-        mRv_Cust.setLayoutManager(new LinearLayoutManager(this));
+        LinearLayoutManager llm = new LinearLayoutManager(this);
+        mRv_Cust.setLayoutManager(llm);
 
         mCustAdapter = new CustomerAdapter(CustomerActivity.this, mCustList);
         mRv_Cust.setAdapter(mCustAdapter);
         mCustAdapter.setOnItemClickListener(CustomerActivity.this);
 
         Button confirm_selected_cust = findViewById(R.id.confirm_selected_customer);
+        Button cancel = findViewById(R.id.cancel);
+
+        cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(CustomerActivity.this, Cart.class);
+                setResult(RESULT_CANCELED, i);
+                finish();
+            }
+        });
+
         confirm_selected_cust.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mSelectedCustomer == null){
+                if (mSelectedCustomer == null) {
                     Toast.makeText(CustomerActivity.this, "Please select a customer. If you can't find his/her record then try to add an account", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                Toast.makeText(CustomerActivity.this, "customer " +mSelectedCustomer.getId(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(CustomerActivity.this, "customer " + mSelectedCustomer.getId(), Toast.LENGTH_SHORT).show();
                 Intent resultIntent = new Intent();
                 resultIntent.putExtra("customer_id", mSelectedCustomer.getId());
                 setResult(RESULT_OK, resultIntent);
@@ -115,28 +155,77 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
 
         searchViewCust = findViewById(R.id.cust_search);
 
+        searchViewCust.setOnSearchViewListener(new MaterialSearchView.SearchViewListener() {
+            @Override
+            public void onSearchViewShown() {
+
+            }
+
+            @Override
+            public void onSearchViewClosed() {
+                mQuery = "";
+                mCustList.clear();
+                mCustAdapter.notifyDataSetChanged();
+                getCustList("", 1);
+            }
+        });
+        searchViewCust.setOnQueryTextListener(new MaterialSearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                if (query != null && !query.isEmpty()){
+                    Log.d(TAG, "onQueryTextSubmit: not null or empty" );
+                    mQuery = query;
+                    mCustList.clear();
+                    mCustAdapter.notifyDataSetChanged();
+                    getCustList(mQuery, 1);
+                }
+                Log.d(TAG, "onQueryTextSubmit: " +query);
+
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if (newText != null && !newText.isEmpty()){
+                    Log.d(TAG, "onQueryTextChange: " +newText);
+                }
+                return true;
+            }
+        });
+        scrollListener = new EndlessRecyclerViewScrollListener(llm) {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
+                Log.d(TAG, "onLoadMore: "+(page+1)+" query " +mQuery + "total" +totalItemsCount);
+                showProgressView();
+                getCustList(mQuery, page+1);
+
+
+            }
+        };
+        mRv_Cust.addOnScrollListener(scrollListener);
     }
 
     @Override
     public void onItemClickListener(int position, View view) {
-       mCustAdapter.selectedItem();
-       mSelectedCustomer = mCustList.get(position);
+        mCustAdapter.selectedItem();
+        mSelectedCustomer = mCustList.get(position);
     }
 
 
-    public ArrayList<Customer> getCustList(String search_customer) {
+    public ArrayList<Customer> getCustList(String search_customer, int page) {
         final ArrayList<Customer> custList = new ArrayList<>();
         final LoginToken user = mDBHelper.getUserToken();
         String url = AppConfig.GET_CUSTOMERS;
-        String params = "?search_value=" +search_customer;
+        String params = "?search_value=" + search_customer +"&page="+page;
         url = url + params;
+
         JsonObjectRequest jObjreq = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                Log.d(TAG, "onResponse: getCustomers " +response);
+                hideProgressView();
                 try {
-                    if (response.getBoolean("success") == false){
-                        if (response.getInt("status") == 401){
+                    if (response.getBoolean("success") == false) {
+                        if (response.getInt("status") == 401) {
                             /*
                              * TODO: make a dialog that the user is not currently on duty
                              * */
@@ -150,10 +239,10 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
                         }
                     }
 
-                    if(response.getInt("status") == 200){
+                    if (response.getInt("status") == 200) {
                         JSONObject data = response.getJSONObject("data");
                         JSONArray customers = data.getJSONArray("data");
-                        for(int i =0; i < customers.length(); i++){
+                        for (int i = 0; i < customers.length(); i++) {
                             JSONObject item = customers.getJSONObject(i);
                             long id = item.getLong("CUSTOMERID");
                             String name = item.getString("NAME");
@@ -164,7 +253,7 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
                             JSONObject user = item.getJSONObject("user");
                             String email = user.getString("email");
 
-                            Log.d(TAG, "onResponse: email " +email);
+                            Log.d(TAG, "onResponse: name " + name);
                             Customer customer = new Customer();
                             customer.setId(id);
                             customer.setName(name);
@@ -174,7 +263,7 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
                             mCustList.add(customer);
 
                         }
-                        progressDialog.dismiss();
+                        hideProgressView();
                         mCustAdapter.notifyDataSetChanged();
                     }
                 } catch (JSONException e) {
@@ -186,8 +275,9 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
             @Override
             public void onErrorResponse(VolleyError error) {
 
+                hideProgressView();
             }
-        }){
+        }) {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 Map<String, String> params = new HashMap<String, String>();
@@ -197,7 +287,6 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
         };
 
         VolleySingleton.getInstance(CustomerActivity.this).addToRequestQueue(jObjreq);
-        Log.d(TAG, "getCustList: " +custList.toString());
         return custList;
     }
 
@@ -206,42 +295,31 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
         View customer_dialog = getLayoutInflater()
                 .inflate(R.layout.customerinfo_dialog, null);
 
-        Button btnAddCustomer   = customer_dialog.findViewById(R.id.add_customer);
-        Button btnCancel        = customer_dialog.findViewById(R.id.cancel_addcust);
-        ImageView setBday       = customer_dialog.findViewById(R.id.ivCust_calendar);
-        bday                    = customer_dialog.findViewById(R.id.etCust_bday);
-        bday.setEnabled(false);
+        Button btnAddCustomer = customer_dialog.findViewById(R.id.add_customer);
+        Button btnCancel = customer_dialog.findViewById(R.id.cancel_addcust);
+        ImageView setBday = customer_dialog.findViewById(R.id.ivCust_calendar);
 
+        initCustDialogWidgets(customer_dialog);
 
 
         builder.setView(customer_dialog);
-        final AlertDialog dialog = builder.create();
+        dialog = builder.create();
         dialog.show();
 
         btnAddCustomer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplicationContext(), "add customer ", Toast.LENGTH_SHORT).show();
-                // if successfully added customer do something and dismiss the dialog
 
-                Customer customerDetails = new Customer();
-                customerDetails.setLname("delagon");
-                customerDetails.setFname("reg");
-                customerDetails.setEmail("jinri.delagon@gmail.com");
-                customerDetails.setBday("2014-01-01");
-                customerDetails.setMobile("09065035079");
-
-                addCustomer(customerDetails);
-
-                dialog.dismiss();
-
+                boolean isValid = validateCustDialogWidgets();
+                if (isValid) {
+                    isPhoneExists(input_mobile.getText().toString().trim());
+                }
             }
         });
 
         btnCancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 dialog.dismiss();
             }
         });
@@ -255,7 +333,218 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
     }
 
 
-    public void showDatePicker(){
+    private void initCustDialogWidgets(View customer_dialog) {
+        bday = customer_dialog.findViewById(R.id.etCust_bday);
+        bday.setEnabled(false);
+
+        // initialize text layout fields
+        layout_lname = customer_dialog.findViewById(R.id.input_layout_lname);
+        layout_fname = customer_dialog.findViewById(R.id.input_layout_fname);
+        layout_email = customer_dialog.findViewById(R.id.input_layout_email);
+        layout_mobile = customer_dialog.findViewById(R.id.input_layout_mobile);
+        layout_bday = customer_dialog.findViewById(R.id.input_layout_bday);
+
+        // initialize edittext  fields
+        input_lname = customer_dialog.findViewById(R.id.input_lname);
+        input_fname = customer_dialog.findViewById(R.id.input_fname);
+        input_mobile = customer_dialog.findViewById(R.id.input_mobile);
+        input_email = customer_dialog.findViewById(R.id.input_email);
+
+        prgDialog = new ProgressDialog(this);
+        // Set Progress Dialog Text
+        prgDialog.setMessage("Please wait...");
+        // Set Cancelable as False
+        prgDialog.setCancelable(false);
+
+    }
+
+    private boolean validateCustDialogWidgets() {
+        //validate customer details
+
+        /*
+         * LASTNAME
+         * */
+        boolean isValid = true;
+
+        if (input_lname.getText().toString().trim().isEmpty()) {
+            layout_lname.setError(getString(R.string.err_lname));
+            isValid = false;
+        } else {
+            layout_lname.setErrorEnabled(false);
+        }
+
+        /*
+         * FIRST NAME
+         * */
+
+
+        if (input_fname.getText().toString().trim().isEmpty()) {
+            layout_fname.setError(getString(R.string.err_fname));
+            isValid = false;
+        } else {
+            layout_fname.setErrorEnabled(false);
+        }
+
+
+        /*
+         * BIRTHDAY
+         * */
+
+        if (bday.getText().toString().trim().isEmpty()) {
+            layout_bday.setError(getString(R.string.err_bday));
+            isValid = false;
+        } else if (calcAge(bday.getText().toString().trim()) < 3) {
+            layout_bday.setError(getString(R.string.err_bday2));
+            isValid = false;
+        } else {
+            layout_bday.setErrorEnabled(false);
+        }
+
+        if (input_email.getText().toString().trim().isEmpty()) {
+            layout_email.setError(getString(R.string.err_email));
+            isValid = false;
+        } else if (android.util.Patterns.EMAIL_ADDRESS.matcher(input_email.getText().toString().trim()).matches() == false) {
+            layout_email.setError(getString(R.string.err_email));
+            isValid = false;
+        } else {
+            layout_email.setErrorEnabled(false);
+        }
+
+        /*
+         * MOBILE NUMBER
+         * */
+        if (input_mobile.getText().toString().trim().isEmpty()) { // empty
+            layout_mobile.setError(getString(R.string.err_mobile));
+            isValid = false;
+        } else if (validateMobile(input_mobile.getText().toString().trim()) == false) { // regex
+            layout_mobile.setError(getString(R.string.err_mobile));
+            isValid = false;
+        } else {
+               layout_mobile.setErrorEnabled(false);
+        }
+
+        return isValid;
+    }
+    public boolean isPhoneExists(final String mobile){
+        // Show Progress Dialog
+        prgDialog.show();
+        final LoginToken user = mDBHelper.getUserToken();
+        final boolean[] isPhoneExists = new boolean[1];
+
+        String url = AppConfig.PHONE_EXISTS;
+        StringRequest stringRequest= new StringRequest(Request.Method.POST, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        // Hide Progress Dialog
+                        prgDialog.hide();
+
+                        try {
+                            JSONObject jObj = new JSONObject(response);
+
+                            if (jObj.getBoolean("success") == false) {
+                                if (jObj.getInt("status") == 401) {
+                                    finish();
+                                    session.setLogin(false);
+                                    mDBHelper.deleteUsers();
+                                    mDBHelper.deleteAllItems();
+
+                                    Intent intent = new Intent(CustomerActivity.this, LoginActivity.class);
+                                    startActivity(intent);
+                                }
+                            }
+                            if (jObj.getInt("status") == 200) {
+                                Log.d(TAG, "onResponse: existing number " +response);
+                                boolean exists = jObj.getBoolean("data");
+                                isPhoneExists[0] = exists;
+                                Log.d(TAG, "onResponse: exist" +exists);
+                                if (exists == true){
+                                    layout_mobile.setError(getString(R.string.err_mobile2));
+                                    return;
+                                }else{
+                                    layout_mobile.setErrorEnabled(false);
+                                    prgDialog.setMessage("Adding to the Database ...");
+                                    prgDialog.show();
+                                    Customer customerDetails = new Customer();
+                                    customerDetails.setLname(input_lname.getText().toString().trim());
+                                    customerDetails.setFname(input_fname.getText().toString().trim());
+                                    customerDetails.setEmail(input_email.getText().toString().trim());
+                                    customerDetails.setBday(bday.getText().toString());
+                                    customerDetails.setMobile(input_mobile.getText().toString().trim());
+
+                                    addCustomer(customerDetails);
+                                }
+
+                            }
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                            Log.d(TAG, "onResponse: " + e.getMessage());
+                        }
+
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                // Hide Progress Dialog
+                prgDialog.hide();
+
+                VolleySingleton.showErrors(error, CustomerActivity.this);
+                NetworkResponse response = error.networkResponse;
+                if (response != null && response.data != null) {
+                    String errorString = new String(response.data);
+                    Toast.makeText(CustomerActivity.this, errorString, Toast.LENGTH_LONG).show();
+                }
+            }
+        })
+        {
+            @Override
+            protected Map<String, String> getParams() {
+                // Posting parameters to login url
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("search_value", mobile );
+                return params;
+            }
+
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("token", user.getToken());
+                return params;
+            }
+
+        };
+        mRequestQ.add(stringRequest);
+        Log.d(TAG, "isPhoneExists: " +isPhoneExists[0]);
+        return  isPhoneExists[0];
+    }
+    public boolean validateMobile(String mobile) {
+        // String regex = "^\\+(?:[0-9] ?){6,14}[0-9]$";
+        // String regex = "^[+]?[0-9]{10,13}$";
+        String regex = "^([ 0-9\\(\\)\\+\\-]{8,})*$";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(mobile);
+        return matcher.matches();
+    }
+
+    public int calcAge(String bdate) {
+        int years = 0;
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            Date dateToday = Calendar.getInstance().getTime(); // date today
+            Date birthdate = sdf.parse(bdate); // birthdate
+
+            Long time = (dateToday.getTime() / 1000) - (birthdate.getTime() / 1000);
+            years = Math.round(time) / 31536000;
+            // int months = Math.round(time - years * 31536000) / 2628000;
+
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return years;
+    }
+
+    public void showDatePicker() {
         Calendar calendar = Calendar.getInstance();
         int year = calendar.get(Calendar.YEAR);
         int month = calendar.get(Calendar.MONTH);
@@ -266,7 +555,7 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
             @Override
             public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
                 month = month + 1;
-                String date = year + "-" + month + "-" +dayOfMonth;
+                String date = year + "-" + month + "-" + dayOfMonth;
                 bday.setText(date);
 
             }
@@ -283,16 +572,25 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
 
     }
 
+    /*------------Set up Progress bar visibility -----------------*/
+    void showProgressView() {
+        progressBar.setVisibility(View.VISIBLE);
+    }
+
+    void hideProgressView() {
+        progressBar.setVisibility(View.INVISIBLE);
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.customer_menu, menu);
 
-        MenuItem searchCustomer =  menu.findItem(R.id.action_search_customer);
+        MenuItem searchCustomer = menu.findItem(R.id.action_search_customer);
         searchViewCust.setMenuItem(searchCustomer);
         return true;
     }
-
+    
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -307,7 +605,7 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
         }
     }
 
-    private String convertStringDate(String date){
+    private String convertStringDate(String date) {
         SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
         SimpleDateFormat format2 = new SimpleDateFormat("dd/MM/yyyy");
 
@@ -323,7 +621,8 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
     }
 
 
-    private void addCustomer(Customer customer){
+    private void addCustomer(Customer customer) {
+
         final LoginToken user = mDBHelper.getUserToken();
         if (user == null) {
             finish();
@@ -340,21 +639,26 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        Log.d(TAG, "onResponse: addorder " +response);
+                        prgDialog.hide();
+                        Log.d(TAG, "onResponse: addorder " + response);
                         try {
                             int status_code = response.getInt("status");
-                            if (status_code == 200) {
-                                  JSONObject data =  response.getJSONObject("data");
-                                  long customer_id = data.getLong("customer_id");
-                                  Toast.makeText(CustomerActivity.this, "added customer " +customer_id, Toast.LENGTH_SHORT).show();
 
-//                                Intent resultIntent = new Intent();
-//                                resultIntent.putExtra("customer_id", mSelectedCustomer.getId());
-//                                setResult(RESULT_OK, resultIntent);
-//                                finish();
+                            if (status_code == 200) {
+                                JSONObject data = response.getJSONObject("data");
+                                long customer_id = data.getLong("customer_id");
+                                Intent resultIntent = new Intent();
+                                if (dialog.isShowing()) {
+                                    resultIntent.putExtra("customer_id", customer_id);
+                                    dialog.dismiss();
+                                }else{
+                                    resultIntent.putExtra("customer_id", mSelectedCustomer.getId());
+                                }
+                                setResult(RESULT_OK, resultIntent);
+                                finish();
 
                             }
-                            Log.d(TAG, "onResponse: placed order status code: " + status_code);
+
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -366,6 +670,7 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
+                        prgDialog.hide();
                         NetworkResponse response = error.networkResponse;
                         Log.d(TAG, "onErrorResponse: network response - " + response);
                         Log.d(TAG, "onErrorResponse: error - " + error);
@@ -394,20 +699,19 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
     }
 
 
-
-    private JSONObject setCustomerDetails(Customer cus){
+    private JSONObject setCustomerDetails(Customer cus) {
         JSONObject customer = new JSONObject();
         try {
             String cust_name = cus.getFname() + " " + cus.getLname();
-            if ( (cus.getFname().isEmpty() || cus.getFname() == null)
-                    || (cus.getLname().isEmpty() || cus.getLname() == null) ){
+            if ((cus.getFname().isEmpty() || cus.getFname() == null)
+                    || (cus.getLname().isEmpty() || cus.getLname() == null)) {
                 cust_name = cus.getName();
             }
             customer.put("name", cust_name);
             customer.put("email", cus.getEmail());
             customer.put("mobile_number", cus.getMobile());
             customer.put("bday", cus.getBday());
-            customer.put("password", cus.getLname()+cus.getMobile());
+            customer.put("password", cus.getLname() + cus.getMobile());
             // set to true since were giving loyalty regardless the customer wants it
             customer.put("is_loyalty", true);
 
@@ -417,5 +721,7 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
 
         return customer;
     }
+
+
 
 }
