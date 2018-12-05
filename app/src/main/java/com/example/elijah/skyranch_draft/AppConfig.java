@@ -14,5 +14,7 @@ public class AppConfig {
     public static final String GET_CUSTOMERS = BASE_URL_API + "/getCustomer";
     public static final String ADD_CUSTOMER = BASE_URL_API + "/newCustomer";
     public static final String PHONE_EXISTS = BASE_URL_API + "/phoneExist";
+    public static final String GET_PRODUCT_GROUPS = BASE_URL_API + "/getProductGroups";
+
 
 }

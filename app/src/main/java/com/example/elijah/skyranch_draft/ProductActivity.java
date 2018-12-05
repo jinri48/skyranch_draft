@@ -22,7 +22,10 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
@@ -48,9 +51,10 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-public class ProductActivity extends AppCompatActivity {
+public class ProductActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
     private static final String TAG = ProductActivity.class.getSimpleName();
     private RecyclerView mRecyclerView;
@@ -65,9 +69,14 @@ public class ProductActivity extends AppCompatActivity {
     GridLayoutManager gridLayoutManager;
 
     private String mQuery = ""; // query for search view
+    private String mGroupCode = "";
     private SearchView mSearchView;
-
     MaterialSearchView materialSearchView;
+
+    ArrayAdapter<ProductGroup> groupAdapter;
+    private Spinner spinner_procategory;
+    private List<ProductGroup> productGroups;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,11 +107,24 @@ public class ProductActivity extends AppCompatActivity {
         showProgressView();
         gridLayoutManager = new GridLayoutManager(this, 2);
         mRecyclerView.setLayoutManager(gridLayoutManager);
-        mRecyclerView.addItemDecoration(new GridSpacingItemDecoration(2, dpToPx(10), true));
+//        mRecyclerView.addItemDecoration(new GridSpacingItemDecoration(2, dpToPx(10), true));
         mAdapter = new ProductAdapter(ProductActivity.this, mListItems);
         mRecyclerView.setAdapter(mAdapter);
 
-        getAllProducts(1, mQuery);
+
+        spinner_procategory = findViewById(R.id.spinner_proCat);
+        productGroups = new ArrayList<>();
+        getAllProductGroups();
+
+        groupAdapter = new ArrayAdapter<ProductGroup>(ProductActivity.this,
+                android.R.layout.simple_spinner_dropdown_item, productGroups);
+        groupAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner_procategory.setAdapter(groupAdapter);
+        spinner_procategory.setOnItemSelectedListener(this);
+
+
+        getAllProducts(1, mQuery, mGroupCode);
+
         materialSearchView = findViewById(R.id.sampleSearch);
         materialSearchView.setOnSearchViewListener(new MaterialSearchView.SearchViewListener() {
             @Override
@@ -115,7 +137,7 @@ public class ProductActivity extends AppCompatActivity {
                 mQuery = "";
                 mListItems.clear();
                 mAdapter.notifyDataSetChanged();
-                getAllProducts(1, "");
+                getAllProducts(1, "", mGroupCode);
                 Log.d(TAG, "onSearchViewClosed: " +mListItems);
             }
         });
@@ -127,7 +149,7 @@ public class ProductActivity extends AppCompatActivity {
                     mQuery = query;
                     mListItems.clear();
                     mAdapter.notifyDataSetChanged();
-                    getAllProducts(1, mQuery);
+                    getAllProducts(1, mQuery, mGroupCode);
                 }
                 Log.d(TAG, "onQueryTextSubmit: " +query);
 
@@ -147,13 +169,12 @@ public class ProductActivity extends AppCompatActivity {
             @Override
             public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
                 showProgressView();
-                getAllProducts(page + 1, mQuery);
-
+                getAllProducts(page + 1, mQuery, mGroupCode);
+                Log.d(TAG, "onLoadMore: "+mGroupCode);
             }
         };
         mRecyclerView.addOnScrollListener(scrollListener);
-
-
+        spinner_procategory.setSelection(57);
     }
 
     @Override
@@ -244,92 +265,7 @@ public class ProductActivity extends AppCompatActivity {
         progressBar.setVisibility(View.INVISIBLE);
     }
 
-    /*------------Set up Search view -----------------*/
-//    private void setupSearchView(MenuItem searchItem) {
-//        mSearchView.setIconifiedByDefault(false);
-//        mSearchView.setOnQueryTextListener(this);
-//        mSearchView.setFocusable(false);
-//        mSearchView.setFocusableInTouchMode(false);
-//    }
-
-//    @Override
-//    public boolean onQueryTextSubmit(String s) {
-//        Intent intent = new Intent(ProductActivity.this, ProductActivity.class);
-//        intent.setAction(Intent.ACTION_SEARCH);
-//        intent.putExtra(SearchManager.QUERY, s);
-//        Log.d(TAG, "onQueryTextSubmit: gonna start activity with the query " + s);
-//        startActivity(intent);
-//        return false;
-//    }
-//
-//    @Override
-//    public boolean onQueryTextChange(String s) {
-//        Log.d(TAG, "onQueryTextChange: " + s);
-//        return false;
-//    }
-
-    /*--------- HANDLE REQUESTS API TO TEXT VIEW ------------*/
-//    private void parseJSON() {
-
-    ////        String url = "https://pixabay.com/api/?key=5303976-fd6581ad4ac165d1b75cc15b3&q=yellow+flowers&image_type=photo";
-//        String url = AppConfig.GET_PRODUCTS_BY_BRANCH + "?arnoc=" +branch_id;
-//        JsonObjectRequest jObjreq = new JsonObjectRequest(Request.Method.GET, url, null,
-//                new Response.Listener<JSONObject>() {
-//                    @Override
-//                    public void onResponse(JSONObject response) {
-//                        try {
-//                            JSONObject data = response.getJSONObject("data");
-//                            JSONArray products = data.getJSONArray("data");
-//
-//                            for (int i = 0; i < products.length(); i++) {
-//                                JSONObject item = products.getJSONObject(i);
-//
-//                                long id = item.getLong("product_id");
-//                                String pro_name = item.getString("product_name");
-//                                String pro_imgUrl = item.getString("img_url");
-//                                Double price = item.getDouble("retail_price");
-//
-//                                long arnoc = item.getLong("arnoc");
-//                                String part_no = item.getString("part_no");
-//                                String group_no = item.getString("group");
-//                                String category = item.getString("category");
-//                                char status = item.getString("status").charAt(0);
-//                                Product product = new Product(id, pro_name, pro_imgUrl, price
-//                                            ,arnoc, part_no, group_no, category, status
-//                              );
-//                                mListItems.add(product);
-//                            }
-//
-//                            mAdapter.notifyDataSetChanged();
-////                            Log.d(TAG, "onResponse: " +mListItems.toString());
-//
-//
-//
-//                        } catch (JSONException e) {
-//                            e.printStackTrace();
-//                            Log.d("JSON", "onResponse: " + e.getMessage());
-//                        }
-//
-//                    }
-//                }, new Response.ErrorListener() {
-//            @Override
-//            public void onErrorResponse(VolleyError error) {
-//                error.printStackTrace();
-//                NetworkResponse response = error.networkResponse;
-//                String errorMsg = error.getMessage();
-//                if(response != null && response.data != null){
-//                    String errorString = new String(response.data);
-//                    Log.i(TAG, "GET PRODUCTS" +errorString);
-//                    errorMsg = errorString;
-//                }
-//                Log.d(TAG, "onErrorResponse: " + error.getMessage());
-//
-//            }
-//        });
-//        mRequestQ.add(jObjreq);
-//    }
-
-    private void getAllProducts(int page_num, String search_item) {
+    private void getAllProducts(int page_num, String search_item, String group_code) {
         final LoginToken user = mDBHelper.getUserToken();
         // redirect to login page
         if (user == null) {
@@ -343,6 +279,7 @@ public class ProductActivity extends AppCompatActivity {
             String params = "?page=" + page_num
                     + "&arnoc=" + String.valueOf(user.getBranch())
                     + "&search_value=" + search_item
+                    + "&group_cat=" +group_code
                     ;
             url = url + params;
             Log.d(TAG, "getAllProducts: url" + url);
@@ -422,99 +359,190 @@ public class ProductActivity extends AppCompatActivity {
             };
             mRequestQ.add(jObjreq);
         }
-
-
     }
 
-    /*------------ coordinator layout computation ----------------------*/
+    private void getAllProductGroups(){
+        showProgressView();
+        String url = AppConfig.GET_PRODUCT_GROUPS;
+        JsonObjectRequest jObjreq =  new JsonObjectRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        hideProgressView();
+                        try {
+                            if (response.getBoolean("success") == false) {
+                                if (response.getInt("status") == 401) {
+                                    /*
+                                     * TODO: make a dialog that the user is not currently on duty
+                                     * */
+                                    finish();
+                                    session.setLogin(false);
+                                    mDBHelper.deleteUsers();
+                                    mDBHelper.deleteAllItems();
 
-    /**
-     * RecyclerView item decoration - give equal margin around grid item
-     */
-    public class GridSpacingItemDecoration extends RecyclerView.ItemDecoration {
+                                    Intent intent = new Intent(ProductActivity.this, LoginActivity.class);
+                                    startActivity(intent);
+                                }
+                            }
+                            if (response.getInt("status") == 200) {
+                                JSONArray data = response.getJSONArray("data");
 
-        private int spanCount;
-        private int spacing;
-        private boolean includeEdge;
+                                for (int i = 0; i < data.length(); i++) {
+                                    JSONObject item = data.getJSONObject(i);
+                                    String code = item.getString("GROUPCODE");
+                                    String desc = item.getString("DESCRIPTION").trim();
+//                                    if (code == "" || code.trim().isEmpty()){
+//                                        desc = "ALL";
+//                                        Log.d(TAG, "onResponse: desc " +desc);
+//                                    }
+                                    Log.d(TAG, "onResponse: getAllProductGroups " +desc);
+                                    ProductGroup productGroup = new ProductGroup(code, desc);
+                                    productGroups.add(productGroup);
+                                }
+                                groupAdapter.notifyDataSetChanged();
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                            Log.d("JSON", "onResponse: " + e.getMessage());
+                        }
 
-        public GridSpacingItemDecoration(int spanCount, int spacing, boolean includeEdge) {
-            this.spanCount = spanCount;
-            this.spacing = spacing;
-            this.includeEdge = includeEdge;
-        }
-
-        @Override
-        public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
-            int position = parent.getChildAdapterPosition(view); // item position
-            int column = position % spanCount; // item column
-
-            if (includeEdge) {
-                outRect.left = spacing - column * spacing / spanCount; // spacing - column * ((1f / spanCount) * spacing)
-                outRect.right = (column + 1) * spacing / spanCount; // (column + 1) * ((1f / spanCount) * spacing)
-
-                if (position < spanCount) { // top edge
-                    outRect.top = spacing;
-                }
-                outRect.bottom = spacing; // item bottom
-            } else {
-                outRect.left = column * spacing / spanCount; // column * ((1f / spanCount) * spacing)
-                outRect.right = spacing - (column + 1) * spacing / spanCount; // spacing - (column + 1) * ((1f /    spanCount) * spacing)
-                if (position >= spanCount) {
-                    outRect.top = spacing; // item top
-                }
-            }
-        }
-    }
-
-    /**
-     * Converting dp to pixel
-     */
-    private int dpToPx(int dp) {
-        Resources r = getResources();
-        return Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, r.getDisplayMetrics()));
-    }
-
-    /**
-     * Initializing collapsing toolbar
-     * Will show and hide the toolbar title on scroll
-     */
-    private void initCollapsingToolbar() {
-        final CollapsingToolbarLayout collapsingToolbar =
-                (CollapsingToolbarLayout) findViewById(R.id.collapsing_toolbar);
-        collapsingToolbar.setTitle(" ");
-        AppBarLayout appBarLayout = (AppBarLayout) findViewById(R.id.appbar);
-        appBarLayout.setExpanded(true);
-
-        // hiding & showing the title when toolbar expanded & collapsed
-        appBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
-            boolean isShow = false;
-            int scrollRange = -1;
-
+                    }
+                }, new Response.ErrorListener() {
             @Override
-            public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
-                if (scrollRange == -1) {
-                    scrollRange = appBarLayout.getTotalScrollRange();
-                }
-                if (scrollRange + verticalOffset == 0) {
-                    collapsingToolbar.setTitle(getString(R.string.section_shop));
-                    isShow = true;
-                } else if (isShow) {
-                    collapsingToolbar.setTitle("");
-                    isShow = false;
+            public void onErrorResponse(VolleyError error) {
+                hideProgressView();
+                VolleySingleton.showErrors(error, ProductActivity.this);
+                NetworkResponse response = error.networkResponse;
+                if (response != null && response.data != null) {
+                    String errorString = new String(response.data);
+                    Toast.makeText(ProductActivity.this, errorString, Toast.LENGTH_LONG).show();
                 }
             }
-        });
+        }) {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+//                params.put("token", user.getToken());
+                return params;
+            }
+        };
+        mRequestQ.add(jObjreq);
+    }
+
+    private void initScrollRv(){
+
     }
 
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        Log.d(TAG, "onResume: " + mListItems);
-//        if (mQuery != null){
-//            mListItems.clear();
-//        }
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        ProductGroup group = (ProductGroup) spinner_procategory.getSelectedItem();
+        mListItems.clear();
+        mAdapter.notifyDataSetChanged();
+        mGroupCode = group.getGroupNo();
+
+
+        getAllProducts(1, mQuery, mGroupCode);
+        mRecyclerView.removeOnScrollListener(scrollListener);
+
+        scrollListener = new EndlessRecyclerViewScrollListener(gridLayoutManager) {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
+                showProgressView();
+                getAllProducts(page + 1, mQuery, mGroupCode);
+                Log.d(TAG, "onLoadMore: "+mGroupCode);
+            }
+        };
+        mRecyclerView.addOnScrollListener(scrollListener);
+
     }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+
+    }
+
+
+    /*------------ coordinator layout computation ----------------------*/
+//
+//    /**
+//     * RecyclerView item decoration - give equal margin around grid item
+//     */
+//    public class GridSpacingItemDecoration extends RecyclerView.ItemDecoration {
+//
+//        private int spanCount;
+//        private int spacing;
+//        private boolean includeEdge;
+//
+//        public GridSpacingItemDecoration(int spanCount, int spacing, boolean includeEdge) {
+//            this.spanCount = spanCount;
+//            this.spacing = spacing;
+//            this.includeEdge = includeEdge;
+//        }
+//
+//        @Override
+//        public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
+//            int position = parent.getChildAdapterPosition(view); // item position
+//            int column = position % spanCount; // item column
+//
+//            if (includeEdge) {
+//                outRect.left = spacing - column * spacing / spanCount; // spacing - column * ((1f / spanCount) * spacing)
+//                outRect.right = (column + 1) * spacing / spanCount; // (column + 1) * ((1f / spanCount) * spacing)
+//
+//                if (position < spanCount) { // top edge
+//                    outRect.top = spacing;
+//                }
+//                outRect.bottom = spacing; // item bottom
+//            } else {
+//                outRect.left = column * spacing / spanCount; // column * ((1f / spanCount) * spacing)
+//                outRect.right = spacing - (column + 1) * spacing / spanCount; // spacing - (column + 1) * ((1f /    spanCount) * spacing)
+//                if (position >= spanCount) {
+//                    outRect.top = spacing; // item top
+//                }
+//            }
+//        }
+//    }
+//
+//    /**
+//     * Converting dp to pixel
+//     */
+//    private int dpToPx(int dp) {
+//        Resources r = getResources();
+//        return Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, r.getDisplayMetrics()));
+//    }
+//
+//    /**
+//     * Initializing collapsing toolbar
+//     * Will show and hide the toolbar title on scroll
+//     */
+//    private void initCollapsingToolbar() {
+//        final CollapsingToolbarLayout collapsingToolbar =
+//                (CollapsingToolbarLayout) findViewById(R.id.collapsing_toolbar);
+//        collapsingToolbar.setTitle(" ");
+//        AppBarLayout appBarLayout = (AppBarLayout) findViewById(R.id.appbar);
+//        appBarLayout.setExpanded(true);
+//
+//        // hiding & showing the title when toolbar expanded & collapsed
+//        appBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
+//            boolean isShow = false;
+//            int scrollRange = -1;
+//
+//            @Override
+//            public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
+//                if (scrollRange == -1) {
+//                    scrollRange = appBarLayout.getTotalScrollRange();
+//                }
+//                if (scrollRange + verticalOffset == 0) {
+//                    collapsingToolbar.setTitle(getString(R.string.section_shop));
+//                    isShow = true;
+//                } else if (isShow) {
+//                    collapsingToolbar.setTitle("");
+//                    isShow = false;
+//                }
+//            }
+//        });
+//    }
+
 
 
 }
