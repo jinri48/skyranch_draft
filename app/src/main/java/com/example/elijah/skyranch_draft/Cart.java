@@ -85,8 +85,8 @@ public class Cart extends BaseActivity {
 
     private String barcodeTxt;
     private Bitmap bitmap;
-    private long customer_id;
-
+    private Customer customer_info;
+    TextView tvSelectCust;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -108,23 +108,25 @@ public class Cart extends BaseActivity {
         tvCartPriceTotal = findViewById(R.id.tvCartPriceTotal);
         tvCartPriceTotal.setText("Total: P" + String.format("%,.2f", mAdapter.getTotalItems(mCartItems)));
         tvPlaceHolder = findViewById(R.id.bPlaceOrder);
+        //tvPlaceHolder.setEnabled(false);
+        tvSelectCust = findViewById(R.id.select_cust);
+        tvSelectCust.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openSearchCustomerDialog();
+            }
+        });
 
         tvPlaceHolder.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (customer_info == null){
+                    Toast.makeText(Cart.this, "select a customer first", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 if (mCartItems.size() > 0) {
-//                    // if the customer has a load wallet item  || wants to be in a loyalty || no receipt or paperless
-//                    if (hasLoadWalletItem(mCartItems) || loyalty == true || noReceipt == true){
-                        openSearchCustomerDialog();
-//                    }
-//
-//                    if (noReceipt == false ){ //paper based is selected
-//                        if(loyalty == false){
-//                            // issue a print receipt without asking the customers info
-//                            addOrder();
-//                            return;
-//                        }
-//                    }
+                   Toast.makeText(Cart.this, "selected customer is: " +customer_info.getName(), Toast.LENGTH_SHORT).show();
+                    addOrder();
                 }
             }
         });
@@ -148,7 +150,6 @@ public class Cart extends BaseActivity {
                                         mCartItems.clear();
                                         mAdapter.notifyDataSetChanged();
                                         tvCartPriceTotal.setText("Total: P" + String.format("%,.2f", mAdapter.getTotalItems(mCartItems)));
-
                                     }
                                 }
                             })
@@ -174,14 +175,12 @@ public class Cart extends BaseActivity {
 
             if (item.getProduct().getName().toLowerCase().contains("wallet load")){
                 hasLoadWallet = true;
-
                 break;
             }
         }
 
         Toast.makeText(Cart.this, "has wallet load " +hasLoadWallet, Toast.LENGTH_SHORT).show();
         return hasLoadWallet;
-
     }
 
     private void placeOrderWithReceipt() {
@@ -217,17 +216,16 @@ public class Cart extends BaseActivity {
 
         if (requestCode == 1) {
             if (resultCode == RESULT_OK) {
-                long result = data.getLongExtra("customer_id",  -1);
-                if (result > -1){
-                   customer_id = result;
-                    addOrder();
-                    //clean up list
-                    // print
-
+                Customer customer = data.getExtras().getParcelable("customer_id");
+                if (customer != null){
+                   customer_info = customer;
+                   tvPlaceHolder.setEnabled(true);
+                    tvSelectCust.setText("Customer: " +customer_info.getName());
                 }
             }
             if (resultCode == RESULT_CANCELED) {
-                customer_id = -1;
+                customer_info = null;
+                tvSelectCust.setText(R.string.tapto_select_cust);
             }
         }
     }
@@ -317,13 +315,15 @@ public class Cart extends BaseActivity {
                                 mCartItems.clear();
                                 mAdapter.notifyDataSetChanged();
                                 tvCartPriceTotal.setText("Total: P" + String.format("%,.2f", mAdapter.getTotalItems(mCartItems)));
+                                tvSelectCust.setText(R.string.tapto_select_cust);
                                 Toast.makeText(Cart.this, "Successfully submitted the order", Toast.LENGTH_SHORT).show();
+
                                 if(noReceipt == false){ // can issue a receipt or order slip
                                     setPrintAlignment();
                                     generateBarcode(order_header);
                                     printReceipt();
                                 }
-
+                                customer_info = null;
                             }
                             Log.d(TAG, "onResponse: placed order status code: " + status_code);
                         } catch (JSONException e) {
@@ -368,15 +368,14 @@ public class Cart extends BaseActivity {
 
     private JSONObject getPlacedOrders() {
         JSONObject cart = new JSONObject();
-
         try {
-            cart.put("customer_no", customer_id);
+            cart.put("customer_no", customer_info.getId());
+            cart.put("customer_name", customer_info.getName());
+            cart.put("customer_mobile", customer_info.getMobile());
+
             cart.put("token", LoginActivity.mToken);
             cart.put("total_amount", mAdapter.getTotalItems(mCartItems));
             cart.put("total_no_items", mCartItems.size());
-
-            Gson gson = new Gson();
-            String placedOrders = gson.toJson(mCartItems);
             JSONArray cartItemArray = new JSONArray();
 
             for (OrderItem item : mCartItems) {
@@ -441,6 +440,8 @@ public class Cart extends BaseActivity {
 
         return super.onCreateOptionsMenu(menu);
     }
+
+
 
 
 

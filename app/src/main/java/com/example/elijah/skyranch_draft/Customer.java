@@ -1,8 +1,11 @@
 package com.example.elijah.skyranch_draft;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import ir.mirrajabi.searchdialog.core.Searchable;
 
-public class Customer {
+public class Customer implements Parcelable {
 
     private long id;
     private String fname;
@@ -111,4 +114,45 @@ public class Customer {
                 ", isLoyalty=" + isLoyalty +
                 "} \n";
     }
+
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeLong(this.id);
+        dest.writeString(this.fname);
+        dest.writeString(this.lname);
+        dest.writeString(this.mobile);
+        dest.writeString(this.email);
+        dest.writeString(this.bday);
+        dest.writeString(this.name);
+        dest.writeByte(this.isLoyalty ? (byte) 1 : (byte) 0);
+    }
+
+    protected Customer(Parcel in) {
+        this.id = in.readLong();
+        this.fname = in.readString();
+        this.lname = in.readString();
+        this.mobile = in.readString();
+        this.email = in.readString();
+        this.bday = in.readString();
+        this.name = in.readString();
+        this.isLoyalty = in.readByte() != 0;
+    }
+
+    public static final Parcelable.Creator<Customer> CREATOR = new Parcelable.Creator<Customer>() {
+        @Override
+        public Customer createFromParcel(Parcel source) {
+            return new Customer(source);
+        }
+
+        @Override
+        public Customer[] newArray(int size) {
+            return new Customer[size];
+        }
+    };
 }

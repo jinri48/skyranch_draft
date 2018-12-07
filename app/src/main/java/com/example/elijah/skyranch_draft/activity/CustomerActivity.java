@@ -146,7 +146,7 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
                 }
                 Toast.makeText(CustomerActivity.this, "customer " + mSelectedCustomer.getId(), Toast.LENGTH_SHORT).show();
                 Intent resultIntent = new Intent();
-                resultIntent.putExtra("customer_id", mSelectedCustomer.getId());
+                resultIntent.putExtra("customer_id", mSelectedCustomer);
                 setResult(RESULT_OK, resultIntent);
                 finish();
 

@@ -25,7 +25,14 @@
     <item
         android:id="@+id/action_testprint"
         android:title="Test Print"
-        app:showAsAction="never"/>
+        app:showAsAction="never"
+        android:visible="false"/>
+
+    <item
+        android:id="@+id/action_sales"
+        android:title="Sales"
+        app:showAsAction="never"
+        />
     <item
         android:id="@+id/action_signout"
         android:title="Signout"

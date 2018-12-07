@@ -43,7 +43,7 @@
 
 
     <string name="confirm_selected">Confirm Selected Customer</string>
-    
+
     <!--add customer validation-->
     <string name="err_lname">Please provide a lastname</string>
     <string name="err_fname">Please provide a first name</string>
@@ -54,5 +54,9 @@
     <string name="err_bday2">Age must not be less than 3yrs old</string>
 
     <string name="hint_search_cust">Customer Name/Mobile</string>
-    
+    <string name="hint_base_url">API Base Url</string>
+    <string name="save">Save</string>
+    <string name="edit">Edit</string>
+    <string name="tapto_select_cust">Tap to Select a customer</string>
+
 </resources>

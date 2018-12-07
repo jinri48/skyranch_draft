@@ -42,6 +42,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.elijah.skyranch_draft.activity.PrintActivity;
+import com.example.elijah.skyranch_draft.activity.SalesActivity;
 import com.example.elijah.skyranch_draft.activity.SettingActivity;
 import com.miguelcatalan.materialsearchview.MaterialSearchView;
 
@@ -206,6 +207,11 @@ public class ProductActivity extends AppCompatActivity implements AdapterView.On
 
             case R.id.action_testprint:
                 intent = new Intent(this, PrintActivity.class);
+                startActivity(intent);
+                return true;
+
+            case R.id.action_sales:
+                intent = new Intent(this, SalesActivity.class);
                 startActivity(intent);
                 return true;
 

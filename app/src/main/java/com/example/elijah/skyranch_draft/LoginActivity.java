@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.android.volley.DefaultRetryPolicy;
@@ -69,8 +70,19 @@ public class LoginActivity extends AppCompatActivity {
             public void onClick(View v) {
                 boolean validFields = validate(); // check if the fields are filled out
                 if (validFields) {
+                    btnLogin.setText("Logging in");
+                    btnLogin.setEnabled(false);
                     login(etUsername.getText().toString(), etPassword.getText().toString());
                 }
+            }
+        });
+
+        ImageView apiSetting =  findViewById(R.id.setting_connection);
+        apiSetting.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(LoginActivity.this, BaseUrlActivity.class);
+                startActivity(intent);
             }
         });
 
@@ -112,7 +124,7 @@ public class LoginActivity extends AppCompatActivity {
         RequestQueue queue = VolleySingleton
                 .getInstance(LoginActivity.this.getApplicationContext())
                 .getRequestQueue();
-
+        Log.d(TAG, "login: url " +url);
         StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>() {
                     @Override
@@ -122,9 +134,13 @@ public class LoginActivity extends AppCompatActivity {
                             String msg = jObj.getString("message");
                             int status_code = jObj.getInt("status");
 
+                            btnLogin.setText("Login");
+                            btnLogin.setEnabled(true);
+
                             Toast.makeText(LoginActivity.this, msg, Toast.LENGTH_SHORT).show();
                             // Successful logged in
                             if (status_code == 200) {
+
                                 String name = jObj.getString("name");
                                 String token = jObj.getString("token");
                                 String branch_id = jObj.getString("branch_id");
@@ -146,6 +162,7 @@ public class LoginActivity extends AppCompatActivity {
                             Log.d(TAG, "onResponse:for login " + e.getMessage());
                         }
 
+                        mDBHelper.close();
 
                     }
                 },
@@ -154,6 +171,10 @@ public class LoginActivity extends AppCompatActivity {
                     public void onErrorResponse(VolleyError error) {
                         VolleySingleton.showErrors(error, LoginActivity.this);
                         NetworkResponse response = error.networkResponse;
+
+                        btnLogin.setText("Login");
+                        btnLogin.setEnabled(true);
+                        mDBHelper.close();
 
                         if (response == null){
                             Toast.makeText(LoginActivity.this, "Sorry can't login an account. Try again", Toast.LENGTH_LONG).show();
@@ -181,6 +202,8 @@ public class LoginActivity extends AppCompatActivity {
 //                        }
 //
 //                        Toast.makeText(LoginActivity.this, "Error " + errorMsg, Toast.LENGTH_SHORT).show();
+
+
                     }
                 }) {
 

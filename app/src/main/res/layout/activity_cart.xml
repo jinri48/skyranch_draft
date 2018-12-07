@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/layout_linear"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:id="@+id/layout_linear"
     tools:context=".Cart">
 
     <TextView
@@ -16,22 +16,34 @@
         android:layout_weight="0"
         android:gravity="bottom"
         android:text=""
-        android:visibility="gone"
-        />
+        android:visibility="gone" />
     <!--<TextView-->
     <!--android:layout_width="wrap_content"-->
     <!--android:layout_height="wrap_content"-->
     <!--android:id="@+id/tvCartData"-->
     <!--android:hint="name name name"-->
     <!--/>-->
+
+    <TextView
+        android:id="@+id/select_cust"
+        android:padding="5dp"
+
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/tapto_select_cust"
+        android:textSize="16sp"
+        android:background="@color/colorPrimaryDark"
+        android:textColor="@color/white"
+        android:layout_marginBottom="10dp"
+        >
+    </TextView>
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/rv_cart"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:scrollbars="vertical"
-
-        ></android.support.v7.widget.RecyclerView>
+        android:scrollbars="vertical"/>
 
     <TextView
         android:id="@+id/tvCartPriceTotal"
@@ -42,38 +54,36 @@
         android:layout_weight="0"
         android:gravity="bottom"
         android:text="Total Amount P0.00"
-        android:textSize="25sp" />
+        android:textSize="25sp"/>
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
         android:layout_gravity="center"
         android:layout_marginBottom="10dp"
-        >
+        android:orientation="horizontal">
 
         <Button
             android:id="@+id/bRemoveItems"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Remove All Items"
-            android:textSize="14sp"
             android:background="@color/colorPrimaryDark"
             android:padding="10dp"
+            android:text="Remove All Items"
             android:textColor="#fff"
-            />
+            android:textSize="14sp" />
 
         <Button
             android:id="@+id/bPlaceOrder"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Place Order"
-            android:textSize="14sp"
             android:background="@color/colorPrimary"
             android:padding="10dp"
+            android:text="Place Order"
             android:textColor="#fff"
+            android:textSize="14sp"
             />
     </LinearLayout>
 
