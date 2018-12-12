@@ -4,9 +4,11 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.elijah.skyranch_draft.BaseUrlActivity;
 import com.example.elijah.skyranch_draft.R;
 import com.example.elijah.skyranch_draft.utils.AidlUtil;
 import com.example.elijah.skyranch_draft.utils.BluetoothUtil;
@@ -27,6 +29,15 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         findViewById(R.id.setting_info).setOnClickListener(this);
         mTextView1 = (TextView)findViewById(R.id.setting_conected);
         mTextView2 =(TextView)findViewById(R.id.setting_disconected);
+        LinearLayout layout_api = (LinearLayout) findViewById(R.id.setting_api);
+
+        layout_api.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i =  new Intent(SettingActivity.this, BaseUrlActivity.class);
+                startActivity(i);
+            }
+        });
         mTextView1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -42,7 +53,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
             }
         });
 
-        Toast.makeText(SettingActivity.this, "" +baseApp.isAidl(), Toast.LENGTH_SHORT).show();
+        /*Toast.makeText(SettingActivity.this, "" +baseApp.isAidl(), Toast.LENGTH_SHORT).show();*/
         if(baseApp.isAidl())
             ((TextView)findViewById(R.id.setting_textview1)).setText("AIDL");
         else

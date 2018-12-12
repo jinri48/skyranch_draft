@@ -7,9 +7,11 @@
     tools:context=".activity.SalesActivity">
 
     <LinearLayout
-        android:id="@+id/layout_saleImg"
+        android:id="@+id/layout_saleBanner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="15dp"
+        android:background="@color/white"
         android:orientation="vertical"
         android:paddingVertical="30dp">
 
@@ -28,36 +30,101 @@
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_weight="2"
                 android:orientation="vertical">
 
                 <TextView
-                    android:layout_marginLeft="12dp"
+                    android:id="@+id/sales_total"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginLeft="22dp"
                     android:text="PHP 200"
-                    android:textSize="22sp"
                     android:textColor="#3d3d3d"
-                    android:id="@+id/sales_total"/>
+                    android:textSize="22sp" />
 
                 <TextView
                     android:id="@+id/sales_date"
-                    android:layout_marginLeft="12dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginLeft="22dp"
+                    android:layout_marginTop="4dp"
                     android:text="As of 2018-12-04"
                     android:textSize="16sp" />
 
             </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical" android:visibility="gone">
+
+                <Button
+                    android:id="@+id/btn_filterSales"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:backgroundTint="#11163e"
+                    android:text="@string/filter"
+                    android:textAllCaps="false"
+                    android:textColor="@color/white" />
+
+            </LinearLayout>
+
+
         </LinearLayout>
 
     </LinearLayout>
 
-    <android.support.v7.widget.RecyclerView
+    <com.github.aakira.expandablelayout.ExpandableRelativeLayout
+        android:id="@+id/exp_filter"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/layout_saleImg"
-        android:paddingHorizontal="10dp">
-    </android.support.v7.widget.RecyclerView>
+        android:layout_below="@+id/layout_saleBanner"
+        android:layout_marginVertical="10dp"
+        android:paddingHorizontal="22dp"
+        android:paddingVertical="10dp"
+        app:ael_duration="200"
+        app:ael_expanded="false"
+        app:ael_interpolator="accelerate"
+        app:ael_orientation="vertical"
+        android:visibility="gone"
+        >
+
+
+        <EditText
+            android:id="@+id/search_sales"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawableEnd="@drawable/ic_search"
+            android:drawableRight="@drawable/ic_search"
+            android:hint="@string/hint_search"
+            android:paddingHorizontal="10dp"
+            android:singleLine="true" />
+
+        <Spinner
+            android:id="@+id/sales_stat"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/search_sales" />
+
+    </com.github.aakira.expandablelayout.ExpandableRelativeLayout>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/rv_sales"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/exp_filter"
+        android:paddingHorizontal="10dp"></android.support.v7.widget.RecyclerView>
+    <ProgressBar
+        android:id="@+id/pBSales"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="visible"
+        android:background="@android:color/transparent"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        />
 
 </RelativeLayout>

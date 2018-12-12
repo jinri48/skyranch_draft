@@ -37,10 +37,14 @@ public class CustomerAdapter extends RecyclerView.Adapter<CustomerAdapter.Custom
     public void onBindViewHolder(@NonNull CustomerViewHolder customerViewHolder, int i) {
 
         Customer customer = customerList.get(i);
+
         customerViewHolder.mCustName.setText(customer.getName());
         customerViewHolder.mCustBday .setText(customer.getBday());
         customerViewHolder. mCustMobile.setText(customer.getMobile());
-        customerViewHolder.mCustEmail.setText(customer.getEmail());
+        if (customer.getEmail() != null){
+            customerViewHolder.mCustEmail.setText(customer.getEmail());
+        }
+
 
         if (sSelected == i){
             customerViewHolder.selector.setChecked(true);

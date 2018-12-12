@@ -1,6 +1,11 @@
 package com.example.elijah.skyranch_draft;
 
-public class OrderHeader {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+import java.util.ArrayList;
+
+public class OrderHeader implements Parcelable {
 
     private long or_no;
     private String branch_id;
@@ -11,6 +16,7 @@ public class OrderHeader {
     private Customer customer;
     private String cce_number;
     private String cce_name;
+    private String status;
 
     public OrderHeader() {
     }
@@ -102,6 +108,14 @@ public class OrderHeader {
         this.cce_name = cce_name;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
     @Override
     public String toString() {
         return "OrderHeader{" +
@@ -116,4 +130,49 @@ public class OrderHeader {
                 ", cce_name='" + cce_name + '\'' +
                 "} \n";
     }
+
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeLong(this.or_no);
+        dest.writeString(this.branch_id);
+        dest.writeDouble(this.net_amount);
+        dest.writeDouble(this.total_amount);
+        dest.writeString(this.trans_type);
+        dest.writeString(this.os_date);
+        dest.writeParcelable(this.customer, flags);
+        dest.writeString(this.cce_number);
+        dest.writeString(this.cce_name);
+        dest.writeString(this.status);
+    }
+
+    protected OrderHeader(Parcel in) {
+        this.or_no = in.readLong();
+        this.branch_id = in.readString();
+        this.net_amount = in.readDouble();
+        this.total_amount = in.readDouble();
+        this.trans_type = in.readString();
+        this.os_date = in.readString();
+        this.customer = in.readParcelable(Customer.class.getClassLoader());
+        this.cce_number = in.readString();
+        this.cce_name = in.readString();
+        this.status = in.readString();
+    }
+
+    public static final Parcelable.Creator<OrderHeader> CREATOR = new Parcelable.Creator<OrderHeader>() {
+        @Override
+        public OrderHeader createFromParcel(Parcel source) {
+            return new OrderHeader(source);
+        }
+
+        @Override
+        public OrderHeader[] newArray(int size) {
+            return new OrderHeader[size];
+        }
+    };
 }

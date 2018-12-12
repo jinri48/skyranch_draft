@@ -31,7 +31,7 @@ import java.util.Map;
 public class LoginActivity extends AppCompatActivity {
     private static final String TAG = LoginActivity.class.getSimpleName();
     private DatabaseHelper mDBHelper;
-    private SQLiteDatabase mDatabase;
+
     public static String mToken;
     private SessionManager session;
 
@@ -52,8 +52,6 @@ public class LoginActivity extends AppCompatActivity {
 
         // establish a database connection
         mDBHelper = DatabaseHelper.newInstance(this);
-        mDatabase = mDBHelper.getWritableDatabase();
-
         // Session Manager
         session = new SessionManager(this);
         Log.d(TAG, "onCreate: " + session.isLoggedIn());
@@ -170,6 +168,7 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         VolleySingleton.showErrors(error, LoginActivity.this);
+                        Log.d(TAG, "onErrorResponse: login " +error);
                         NetworkResponse response = error.networkResponse;
 
                         btnLogin.setText("Login");
@@ -183,27 +182,6 @@ public class LoginActivity extends AppCompatActivity {
                             String errorString = new String(response.data);
                             Toast.makeText(LoginActivity.this, errorString, Toast.LENGTH_LONG).show();
                         }
-
-//                        NetworkResponse response = error.networkResponse;
-//                        Log.d(TAG, "onErrorResponse: network response - "+response);
-//                        Log.d(TAG, "onErrorResponse: error - " +error);
-//
-//                        String errorMsg = error.getMessage();
-//                        if(response != null && response.data != null){
-//                            String errorString = new String(response.data);
-//                            Log.i("log error", errorString);
-//                            errorMsg = errorString;
-//                            return;
-//                        }
-//
-//                        if(response == null) {
-//
-//                            errorMsg = "Sorry can't login an account. Try again";
-//                        }
-//
-//                        Toast.makeText(LoginActivity.this, "Error " + errorMsg, Toast.LENGTH_SHORT).show();
-
-
                     }
                 }) {
 

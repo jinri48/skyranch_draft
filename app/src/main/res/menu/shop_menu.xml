@@ -37,5 +37,6 @@
         android:id="@+id/action_signout"
         android:title="Signout"
         android:icon="@drawable/ic_exit_24dp"
+        android:orderInCategory="4"
         app:showAsAction="never"/>
 </menu>

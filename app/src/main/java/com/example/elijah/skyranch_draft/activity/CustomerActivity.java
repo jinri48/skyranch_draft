@@ -29,6 +29,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -96,7 +97,7 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
     private String mQuery = "";
     private EndlessRecyclerViewScrollListener scrollListener;
     private ProgressBar progressBar;
-
+    private Button btnAddCustomer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,14 +113,13 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
 
 
         mCustList = new ArrayList<>();
-
-        
-        progressBar = findViewById(R.id.pbCust); 
+        progressBar = findViewById(R.id.pbCust);
         getCustList(mQuery, 1);
 
         mRv_Cust = findViewById(R.id.rvCustCustom);
         LinearLayoutManager llm = new LinearLayoutManager(this);
         mRv_Cust.setLayoutManager(llm);
+
 
         mCustAdapter = new CustomerAdapter(CustomerActivity.this, mCustList);
         mRv_Cust.setAdapter(mCustAdapter);
@@ -144,9 +144,19 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
                     Toast.makeText(CustomerActivity.this, "Please select a customer. If you can't find his/her record then try to add an account", Toast.LENGTH_SHORT).show();
                     return;
                 }
+                /*
+                 * TODO: create a dialog that accepts temporary mobile assign it to selected custoner mobile
+                 * */
+                /*
+                *  AlertDialog.Builder builder = new AlertDialog.Builder(CustomerActivity.this);
+                    View customer_dialog = getLayoutInflater().inflate(R.layout.customerinfo_dialog, null);
+                * */
+
+
                 Toast.makeText(CustomerActivity.this, "customer " + mSelectedCustomer.getId(), Toast.LENGTH_SHORT).show();
                 Intent resultIntent = new Intent();
                 resultIntent.putExtra("customer_id", mSelectedCustomer);
+                session.setCustomer(mSelectedCustomer);
                 setResult(RESULT_OK, resultIntent);
                 finish();
 
@@ -172,22 +182,22 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
         searchViewCust.setOnQueryTextListener(new MaterialSearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                if (query != null && !query.isEmpty()){
-                    Log.d(TAG, "onQueryTextSubmit: not null or empty" );
+                if (query != null && !query.isEmpty()) {
+                    Log.d(TAG, "onQueryTextSubmit: not null or empty");
                     mQuery = query;
                     mCustList.clear();
                     mCustAdapter.notifyDataSetChanged();
                     getCustList(mQuery, 1);
                 }
-                Log.d(TAG, "onQueryTextSubmit: " +query);
+                Log.d(TAG, "onQueryTextSubmit: " + query);
 
                 return true;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                if (newText != null && !newText.isEmpty()){
-                    Log.d(TAG, "onQueryTextChange: " +newText);
+                if (newText != null && !newText.isEmpty()) {
+                    Log.d(TAG, "onQueryTextChange: " + newText);
                 }
                 return true;
             }
@@ -195,9 +205,9 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
         scrollListener = new EndlessRecyclerViewScrollListener(llm) {
             @Override
             public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
-                Log.d(TAG, "onLoadMore: "+(page+1)+" query " +mQuery + "total" +totalItemsCount);
+                Log.d(TAG, "onLoadMore: " + (page + 1) + " query " + mQuery + "total" + totalItemsCount);
                 showProgressView();
-                getCustList(mQuery, page+1);
+                getCustList(mQuery, page + 1);
 
 
             }
@@ -216,14 +226,15 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
         final ArrayList<Customer> custList = new ArrayList<>();
         final LoginToken user = mDBHelper.getUserToken();
         String url = AppConfig.GET_CUSTOMERS;
-        String params = "?search_value=" + search_customer +"&page="+page;
+        String params = "?search_value=" + search_customer + "&page=" + page;
         url = url + params;
 
         JsonObjectRequest jObjreq = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                hideProgressView();
+
                 try {
+                    hideProgressView();
                     if (response.getBoolean("success") == false) {
                         if (response.getInt("status") == 401) {
                             /*
@@ -250,16 +261,23 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
                             bday = convertStringDate(bday);
                             String mobile = item.getString("mobile_number");
 
-                            JSONObject user = item.getJSONObject("user");
-                            String email = user.getString("email");
 
-                            Log.d(TAG, "onResponse: name " + name);
                             Customer customer = new Customer();
                             customer.setId(id);
                             customer.setName(name);
                             customer.setBday(bday);
                             customer.setMobile(mobile);
+                            JSONObject user = item.optJSONObject("user");
+                            String email = "";
+                            if (user != null) {
+                                email = user.getString("email");
+
+                            } else {
+                                email = "N/A";
+                            }
                             customer.setEmail(email);
+
+
                             mCustList.add(customer);
 
                         }
@@ -276,6 +294,7 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
             public void onErrorResponse(VolleyError error) {
 
                 hideProgressView();
+                Toast.makeText(CustomerActivity.this, error.getMessage(), Toast.LENGTH_SHORT).show();
             }
         }) {
             @Override
@@ -295,7 +314,7 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
         View customer_dialog = getLayoutInflater()
                 .inflate(R.layout.customerinfo_dialog, null);
 
-        Button btnAddCustomer = customer_dialog.findViewById(R.id.add_customer);
+        btnAddCustomer = customer_dialog.findViewById(R.id.add_customer);
         Button btnCancel = customer_dialog.findViewById(R.id.cancel_addcust);
         ImageView setBday = customer_dialog.findViewById(R.id.ivCust_calendar);
 
@@ -312,7 +331,16 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
 
                 boolean isValid = validateCustDialogWidgets();
                 if (isValid) {
-                    isPhoneExists(input_mobile.getText().toString().trim());
+                    btnAddCustomer.setText("Adding to Database");
+                    btnAddCustomer.setEnabled(false);
+                    Customer customerDetails = new Customer();
+                    customerDetails.setLname(input_lname.getText().toString().trim());
+                    customerDetails.setFname(input_fname.getText().toString().trim());
+                    customerDetails.setEmail(input_email.getText().toString().trim());
+                    customerDetails.setBday(bday.getText().toString());
+                    customerDetails.setMobile(input_mobile.getText().toString().trim());
+                    addCustomer(customerDetails);
+                    /*isPhoneExists(input_mobile.getText().toString().trim());*/
                 }
             }
         });
@@ -400,16 +428,6 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
             layout_bday.setErrorEnabled(false);
         }
 
-        if (input_email.getText().toString().trim().isEmpty()) {
-            layout_email.setError(getString(R.string.err_email));
-            isValid = false;
-        } else if (android.util.Patterns.EMAIL_ADDRESS.matcher(input_email.getText().toString().trim()).matches() == false) {
-            layout_email.setError(getString(R.string.err_email));
-            isValid = false;
-        } else {
-            layout_email.setErrorEnabled(false);
-        }
-
         /*
          * MOBILE NUMBER
          * */
@@ -420,12 +438,24 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
             layout_mobile.setError(getString(R.string.err_mobile));
             isValid = false;
         } else {
-               layout_mobile.setErrorEnabled(false);
+            layout_mobile.setErrorEnabled(false);
         }
 
+
+
+        if(!input_email.getText().toString().trim().isEmpty()){
+            if (android.util.Patterns.EMAIL_ADDRESS.matcher
+                    (input_email.getText().toString().trim()).matches() == false) {
+                layout_email.setError(getString(R.string.err_email));
+                isValid = false;
+            } else {
+                layout_email.setErrorEnabled(false);
+            }
+        }
         return isValid;
     }
-    public boolean isPhoneExists(final String mobile){
+
+    /*public boolean isPhoneExists(final String mobile){
         // Show Progress Dialog
         prgDialog.show();
         final LoginToken user = mDBHelper.getUserToken();
@@ -465,14 +495,14 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
                                     layout_mobile.setErrorEnabled(false);
                                     prgDialog.setMessage("Adding to the Database ...");
                                     prgDialog.show();
-                                    Customer customerDetails = new Customer();
-                                    customerDetails.setLname(input_lname.getText().toString().trim());
-                                    customerDetails.setFname(input_fname.getText().toString().trim());
-                                    customerDetails.setEmail(input_email.getText().toString().trim());
-                                    customerDetails.setBday(bday.getText().toString());
-                                    customerDetails.setMobile(input_mobile.getText().toString().trim());
-
-                                    addCustomer(customerDetails);
+//                                    Customer customerDetails = new Customer();
+//                                    customerDetails.setLname(input_lname.getText().toString().trim());
+//                                    customerDetails.setFname(input_fname.getText().toString().trim());
+//                                    customerDetails.setEmail(input_email.getText().toString().trim());
+//                                    customerDetails.setBday(bday.getText().toString());
+//                                    customerDetails.setMobile(input_mobile.getText().toString().trim());
+//
+//                                    addCustomer(customerDetails);
                                 }
 
                             }
@@ -517,11 +547,12 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
         mRequestQ.add(stringRequest);
         Log.d(TAG, "isPhoneExists: " +isPhoneExists[0]);
         return  isPhoneExists[0];
-    }
+    }*/
     public boolean validateMobile(String mobile) {
         // String regex = "^\\+(?:[0-9] ?){6,14}[0-9]$";
         // String regex = "^[+]?[0-9]{10,13}$";
-        String regex = "^([ 0-9\\(\\)\\+\\-]{8,})*$";
+//        String regex = "^([ 0-9\\(\\)\\+\\-]{8,})*$";
+        String regex = "^(\\+639)\\d{9}$";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(mobile);
         return matcher.matches();
@@ -590,7 +621,7 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
         searchViewCust.setMenuItem(searchCustomer);
         return true;
     }
-    
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -621,7 +652,7 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
     }
 
 
-    private void addCustomer(Customer customer) {
+    private void addCustomer(final Customer customer) {
 
         final LoginToken user = mDBHelper.getUserToken();
         if (user == null) {
@@ -640,30 +671,48 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
                     @Override
                     public void onResponse(JSONObject response) {
                         prgDialog.hide();
-                        Log.d(TAG, "onResponse: addorder " + response);
+                        btnAddCustomer.setText("Add to Database");
+                        btnAddCustomer.setEnabled(true);
+                        Log.d(TAG, "onResponse: addCustomer " + response);
                         try {
                             int status_code = response.getInt("status");
-
-                            if (status_code == 200) {
-                                JSONObject data = response.getJSONObject("data");
-                                long customer_id = data.getLong("customer_id");
-                                Intent resultIntent = new Intent();
-                                if (dialog.isShowing()) {
-                                    resultIntent.putExtra("customer_id", customer_id);
-                                    dialog.dismiss();
+                            if (response.getBoolean("success") == false){
+                                if (response.getString("message").equals("Mobile Number Exists")){
+                                    layout_mobile.setError(getString(R.string.err_mobile2));
+                                    return;
                                 }else{
-                                    resultIntent.putExtra("customer_id", mSelectedCustomer.getId());
+                                    Toast.makeText(CustomerActivity.this, "Cannot add customer: " +response, Toast.LENGTH_SHORT).show();
                                 }
-                                setResult(RESULT_OK, resultIntent);
-                                finish();
+                            }
+                            if (response.getBoolean("success") == true){
 
+                                if (status_code == 200) {
+                                    layout_fname.setErrorEnabled(false);
+                                    JSONObject data = response.getJSONObject("data");
+                                    Log.d(TAG, "onResponse: addorder " + data);
+                                    long customer_id = data.getLong("customer_id");
+                                    Intent resultIntent = new Intent();
+                                    if (dialog.isShowing()) {
+                                        customer.setId(customer_id);
+                                        if (customer.getName() == null) {
+                                            customer.setName(customer.getFname() + " " + customer.getLname());
+                                        }
+                                        resultIntent.putExtra("customer_id", customer);
+                                        session.setCustomer(customer);
+                                        dialog.dismiss();
+                                    } else {
+                                        resultIntent.putExtra("customer_id", mSelectedCustomer.getId());
+                                        session.setCustomer(mSelectedCustomer);
+                                    }
+                                    setResult(RESULT_OK, resultIntent);
+                                    finish();
+                                }
                             }
 
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
 
-                        Log.d(TAG, "onResponse: " + response);
 
                     }
                 },
@@ -671,6 +720,8 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         prgDialog.hide();
+                        btnAddCustomer.setText("Add to Database");
+                        btnAddCustomer.setEnabled(true);
                         NetworkResponse response = error.networkResponse;
                         Log.d(TAG, "onErrorResponse: network response - " + response);
                         Log.d(TAG, "onErrorResponse: error - " + error);
@@ -694,6 +745,9 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
                 return params;
             }
         };
+        // to prevent multiple retries
+        stringRequest.setRetryPolicy(
+                new DefaultRetryPolicy(0, -1, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 
         VolleySingleton.getInstance(CustomerActivity.this).addToRequestQueue(stringRequest);
     }
@@ -711,9 +765,10 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
             customer.put("email", cus.getEmail());
             customer.put("mobile_number", cus.getMobile());
             customer.put("bday", cus.getBday());
-            customer.put("password", cus.getLname() + cus.getMobile());
             // set to true since were giving loyalty regardless the customer wants it
             customer.put("is_loyalty", true);
+
+            Log.d(TAG, "setCustomerDetails: " +cus);
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -721,7 +776,6 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
 
         return customer;
     }
-
 
 
 }

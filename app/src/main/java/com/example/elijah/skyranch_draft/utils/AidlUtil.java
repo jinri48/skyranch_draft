@@ -292,7 +292,7 @@ public class AidlUtil {
     }
 
 
-    public void printBitmapCust(Bitmap bitmap, int orientation, String text) {
+    public void printBitmapCust(Bitmap bitmap, int orientation, String text, String text2, String text3) {
         if (woyouService == null) {
             Toast.makeText(context,"服务已断开！",Toast.LENGTH_LONG).show();
             return;
@@ -306,8 +306,11 @@ public class AidlUtil {
                 woyouService.printBitmap(bitmap, null);
                 woyouService.printText(text, null);
             }else{
+                woyouService.printText(text3, null);
                 woyouService.printBitmap(bitmap, null);
                 woyouService.printText(text, null);
+                woyouService.printText("\n"+text2, null);
+
 //                woyouService.printText("\n纵向排列\n", null);
 //                woyouService.printBitmap(bitmap, null);
 //                woyouService.printText("\n纵向排列\n", null);

@@ -29,6 +29,7 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NetworkError;
 import com.android.volley.NetworkResponse;
 import com.android.volley.NoConnectionError;
@@ -363,7 +364,13 @@ public class ProductActivity extends AppCompatActivity implements AdapterView.On
                     return params;
                 }
             };
+
+            jObjreq.setRetryPolicy(new DefaultRetryPolicy(
+                    30000,
+                   5,
+                    DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
             mRequestQ.add(jObjreq);
+
         }
     }
 

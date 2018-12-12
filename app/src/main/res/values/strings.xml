@@ -48,7 +48,7 @@
     <string name="err_lname">Please provide a lastname</string>
     <string name="err_fname">Please provide a first name</string>
     <string name="err_bday">Please provide a birthday</string>
-    <string name="err_mobile">Please provide a valid mobile number</string>
+    <string name="err_mobile">Please provide a valid mobile (e.g +639075035079)</string>
     <string name="err_mobile2">Phone number already exists</string>
     <string name="err_email">Please provide a valid email</string>
     <string name="err_bday2">Age must not be less than 3yrs old</string>
@@ -58,5 +58,11 @@
     <string name="save">Save</string>
     <string name="edit">Edit</string>
     <string name="tapto_select_cust">Tap to Select a customer</string>
+    <string name="filter">Filter Results</string>
+    <string name="hint_search">Search ...</string>
+    <string name="confirm_tempMobile">Confirm Mobile</string>
+    <string name="hint_mobile_temp">Temporary Mobile Number</string>
+    <string name="retry">Retry</string>
+    <string name="api_url">Api</string>
 
 </resources>

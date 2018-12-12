@@ -55,7 +55,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
             productViewHolder.mProName.setText(pro_name);
 
             Picasso.get().load(pro_imgUrl).error(R.drawable.pro_img_placeholder).fit().centerCrop().into(productViewHolder.mProImg);
-            productViewHolder.mRetailPrice.setText(String.valueOf(pro_price));
+            productViewHolder.mRetailPrice.setText(String.format("%,.2f", pro_price));
 
 
             // go to product detail page

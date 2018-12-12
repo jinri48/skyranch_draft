@@ -92,7 +92,7 @@ public class PrintActivity extends BaseActivity {
                     boolean isBold = true;
                     boolean isUnderLine = false;
                     AidlUtil.getInstance().printText("Enchanted Kingdom", 32, isBold, isUnderLine);
-                    AidlUtil.getInstance().printBitmapCust(bitmap, myorientation, barcodeTXT+"\n");
+                    AidlUtil.getInstance().printBitmapCust(bitmap, myorientation, barcodeTXT+"\n", "", "");
                 }
 
 

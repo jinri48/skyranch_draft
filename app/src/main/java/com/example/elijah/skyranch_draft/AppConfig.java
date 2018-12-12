@@ -1,9 +1,11 @@
 package com.example.elijah.skyranch_draft;
 
-public class AppConfig {
+import android.util.Log;
 
-    public static String BASE_URL_API = "http://172.16.12.112:8000/api";
-   // public static String BASE_URL_API = "http://192.168.88.254:8000/api";
+public class AppConfig {
+//  public static String BASE_URL_API = "http://172.16.12.112:8000/api";
+    public static String BASE_URL_API = "http://192.168.88.254:8000/api";
+//     public static String BASE_URL_API = "http://192.168.223.1:8000/api";
 
     //    routes
     public static final String LOGIN = BASE_URL_API + "/login";
@@ -19,5 +21,9 @@ public class AppConfig {
 
     public static final String GET_SALES_HISTORY = BASE_URL_API + "/getSalesHistory";
     public static final String GET_SALES_TOTAL = BASE_URL_API + "/getSalesTotal";
+
+    public static final String GET_ORDER_DETAILS = BASE_URL_API + "/order-slip/header/";
+    public static final String APPEND_DETAIL ="/details";
+
 
 }

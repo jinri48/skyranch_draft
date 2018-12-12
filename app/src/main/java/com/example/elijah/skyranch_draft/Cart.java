@@ -117,16 +117,28 @@ public class Cart extends BaseActivity {
             }
         });
 
+        if(session.getCustomer() != null){
+            customer_info = session.getCustomer();
+            tvSelectCust.setText("Customer: " +customer_info.getName());
+        }
+
         tvPlaceHolder.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                customer_info = session.getCustomer();
                 if (customer_info == null){
                     Toast.makeText(Cart.this, "select a customer first", Toast.LENGTH_SHORT).show();
                     return;
                 }
+
+
                 if (mCartItems.size() > 0) {
-                   Toast.makeText(Cart.this, "selected customer is: " +customer_info.getName(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(Cart.this, "selected customer is: " +customer_info.getName(), Toast.LENGTH_SHORT).show();
+                    tvPlaceHolder.setEnabled(false);
+                    tvPlaceHolder.setText("Placing the order");
                     addOrder();
+                }else{
+                    Toast.makeText(Cart.this, "Cannot place order/s when there's nothing in your cart", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -216,15 +228,17 @@ public class Cart extends BaseActivity {
 
         if (requestCode == 1) {
             if (resultCode == RESULT_OK) {
-                Customer customer = data.getExtras().getParcelable("customer_id");
+//                Customer customer = data.getExtras().getParcelable("customer_id");
+                Customer customer = session.getCustomer();
                 if (customer != null){
                    customer_info = customer;
                    tvPlaceHolder.setEnabled(true);
-                    tvSelectCust.setText("Customer: " +customer_info.getName());
+                   tvSelectCust.setText("Customer: " +customer_info.getName());
                 }
             }
             if (resultCode == RESULT_CANCELED) {
                 customer_info = null;
+                session.setCustomer(customer_info);
                 tvSelectCust.setText(R.string.tapto_select_cust);
             }
         }
@@ -260,8 +274,12 @@ public class Cart extends BaseActivity {
         if(baseApp.isAidl()){
             boolean isBold = true;
             boolean isUnderLine = false;
+            String content = customer_info.getId()+"-"+customer_info.getName();
             AidlUtil.getInstance().printText("Enchanted Kingdom", 32, isBold, isUnderLine);
-            AidlUtil.getInstance().printBitmapCust(this.bitmap, 1, this.barcodeTxt+"\n");
+            AidlUtil.getInstance().printBitmapCust(this.bitmap, 1, this.barcodeTxt+"\n", content,
+                    customer_info.getMobile());
+
+
         }
       else {
 //            if(mytype == 0){
@@ -301,11 +319,14 @@ public class Cart extends BaseActivity {
             startActivity(intent);
         }
         String url = AppConfig.ADD_CART_ITEMS;
-        JsonObjectRequest stringRequest = new JsonObjectRequest(Request.Method.POST, url, getPlacedOrders(),
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, getPlacedOrders(),
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
                         Log.d(TAG, "onResponse: addorder " +response);
+                        tvPlaceHolder.setEnabled(true);
+                        tvPlaceHolder.setText("Place Order");
+
                         try {
                             int status_code = response.getInt("status");
 
@@ -324,9 +345,11 @@ public class Cart extends BaseActivity {
                                     printReceipt();
                                 }
                                 customer_info = null;
+                                session.setCustomer(null);
                             }
                             Log.d(TAG, "onResponse: placed order status code: " + status_code);
                         } catch (JSONException e) {
+
                             e.printStackTrace();
                         }
 
@@ -337,6 +360,8 @@ public class Cart extends BaseActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
+                        tvPlaceHolder.setEnabled(true);
+                        tvPlaceHolder.setText("Place Order");
                         NetworkResponse response = error.networkResponse;
                         Log.d(TAG, "onErrorResponse: network response - " + response);
                         Log.d(TAG, "onErrorResponse: error - " + error);
@@ -350,6 +375,7 @@ public class Cart extends BaseActivity {
                             return;
                         }
                         Toast.makeText(Cart.this, "Error " + errorMsg, Toast.LENGTH_SHORT).show();
+
                     }
                 }) {
             @Override
@@ -361,13 +387,14 @@ public class Cart extends BaseActivity {
             }
         };
 
-        VolleySingleton.getInstance(Cart.this).addToRequestQueue(stringRequest);
+        VolleySingleton.getInstance(Cart.this).addToRequestQueue(request);
     }
 
 
 
     private JSONObject getPlacedOrders() {
         JSONObject cart = new JSONObject();
+        customer_info = session.getCustomer();
         try {
             cart.put("customer_no", customer_info.getId());
             cart.put("customer_name", customer_info.getName());
