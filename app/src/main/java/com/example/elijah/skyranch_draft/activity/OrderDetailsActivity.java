@@ -69,6 +69,8 @@ public class OrderDetailsActivity extends AppCompatActivity {
         
         if (id > -1 ){
             mList =  new ArrayList<>();
+
+            Log.d(TAG, "initObj: appconfig:  " +AppConfig.BASE_URL_API );
             getAllOSD(0, id);
             mRv_Detail = findViewById(R.id.rv_OSD);
             LinearLayoutManager llm = new LinearLayoutManager(this);

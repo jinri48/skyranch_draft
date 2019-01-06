@@ -154,7 +154,7 @@ public class ProductActivityMain extends AppCompatActivity {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.shop_menu, menu);
         MenuItem searchingSamp =  menu.findItem(R.id.action_search_sample);
-        materialSearchView.setMenuItem(searchingSamp);
+//        materialSearchView.setMenuItem(searchingSamp);
         return true;
     }
 

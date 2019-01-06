@@ -10,12 +10,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.google.android.gms.common.api.Api;
-
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
@@ -50,6 +46,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String KEY_CART_PRO_RETAIL_PRICE = "pro_retail_price";
     private static final String KEY_CART_PRO_STATUS = "pro_status";
 
+
+    //connection table
+    private static final String TABLE_API = "api_connection";
+    private static final String KEY_URL_ID = "_id";
+    private static final String KEY_URL_CONNECT = "url";
 
     // instance of the database(singleton)
     private static DatabaseHelper mDBInstance = null;
@@ -91,9 +92,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + KEY_CART_QTY + " INTEGER, "
                 + KEY_CART_PRICE + " REAL"
                 + ")";
+
+        String CREATE_TABLE_API_CONN = "CREATE TABLE " + TABLE_API + "("
+                + KEY_URL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + KEY_URL_CONNECT+ " TEXT "
+                + ")";
         try {
             db.execSQL(CREATE_TABLE_USERTOKEN);
             db.execSQL(CREATE_TABLE_CART);
+            db.execSQL(CREATE_TABLE_API_CONN);
 
             Log.d(TAG, "onCreate: successfully ");
         } catch (SQLException e) {
@@ -162,10 +169,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             values.put(KEY_BRANCH, userToken.getBranch());
             try {
                 result = db.insertOrThrow(TABLE_USERTOKENS, null, values);
-//                Toast.makeText(mContext, "user was added", Toast.LENGTH_SHORT).show();
                 Log.d(TAG, "addUserToken: successfully added record id " + result);
             } catch (SQLException e) {
                 Log.d(TAG, "addUserToken: error in adding " + e.getMessage());
+
                 e.printStackTrace();
             } finally {
                 db.close();
@@ -234,7 +241,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         long product_id = orderItem.getProduct().getId();
         long result = -1;
 
-        if (itemExistsQty(product_id) <= 0){
+        if (itemExistsQty(product_id) <= 0) {
             SQLiteDatabase db = mDBInstance.getWritableDatabase();
             if (db != null) {
                 ContentValues values = new ContentValues();
@@ -252,19 +259,85 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 } catch (SQLException e) {
                     e.printStackTrace();
                     Log.d(TAG, "addToCart: " + e.getMessage());
-                }finally {
+                } finally {
                     db.close();
                 }
             }
-        }else{
+        } else {
+            // exists
             long qty = itemExistsQty(product_id);
-            result =  updateCartItemByPro(orderItem, qty);
+            result = updateCartItemByPro(orderItem, qty);
         }
 
-        Toast.makeText(mContext,"Successfully added an item to cart",Toast.LENGTH_SHORT).show();
+        Toast.makeText(mContext, "Successfully added an item to cart", Toast.LENGTH_SHORT).show();
         return result;
-}
+    }
 
+    public long addToCrt(OrderItem orderItem) {
+        long product_id = orderItem.getProduct().getId();
+        long result = -1;
+
+        long cart_qty = itemExistsQty(product_id);
+        long or_qty = orderItem.getQty() + cart_qty;
+
+
+
+        if (or_qty > 100 && or_qty < 0){ // not existing but exceeding
+
+            SQLiteDatabase db = mDBInstance.getWritableDatabase();
+            if (db != null) {
+                ContentValues values = new ContentValues();
+                values.put(KEY_CART_PRO_ID, orderItem.getProduct().getId());
+                values.put(KEY_CART_PRO_NAME, orderItem.getProduct().getName());
+                values.put(KEY_CART_PRO_GROUP_NO, orderItem.getProduct().getGroup_no());
+                values.put(KEY_CART_PRO_PART_NO, orderItem.getProduct().getPart_no());
+                values.put(KEY_CART_PRO_RETAIL_PRICE, orderItem.getProduct().getO_price());
+                values.put(KEY_CART_PRO_STATUS, String.valueOf(orderItem.getProduct().getStatus()));
+                values.put(KEY_CART_PRO_IMG_URL, orderItem.getProduct().getImgUrl());
+                values.put(KEY_CART_QTY, orderItem.getQty());
+                values.put(KEY_CART_PRICE, orderItem.getAmount());
+                try {
+                    result = db.insertOrThrow(TABLE_CART, null, values);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    Toast.makeText(mContext, e.getMessage(), Toast.LENGTH_SHORT).show();
+                } finally {
+                    db.close();
+                }
+            }
+        }
+
+
+        if (or_qty < 99 && or_qty > 0){
+            result = updateCartItemByPro(orderItem, cart_qty);
+        } else{
+            SQLiteDatabase db = mDBInstance.getWritableDatabase();
+            if (db != null) {
+                ContentValues values = new ContentValues();
+                values.put(KEY_CART_PRO_ID, orderItem.getProduct().getId());
+                values.put(KEY_CART_PRO_NAME, orderItem.getProduct().getName());
+                values.put(KEY_CART_PRO_GROUP_NO, orderItem.getProduct().getGroup_no());
+                values.put(KEY_CART_PRO_PART_NO, orderItem.getProduct().getPart_no());
+                values.put(KEY_CART_PRO_RETAIL_PRICE, orderItem.getProduct().getO_price());
+                values.put(KEY_CART_PRO_STATUS, String.valueOf(orderItem.getProduct().getStatus()));
+                values.put(KEY_CART_PRO_IMG_URL, orderItem.getProduct().getImgUrl());
+                values.put(KEY_CART_QTY, orderItem.getQty());
+                values.put(KEY_CART_PRICE, orderItem.getAmount());
+                try {
+                    result = db.insertOrThrow(TABLE_CART, null, values);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    Toast.makeText(mContext, e.getMessage(), Toast.LENGTH_SHORT).show();
+                } finally {
+                    db.close();
+                }
+            }
+        }
+        if (result > 0){
+            Toast.makeText(mContext, "Successfully added an item to cart", Toast.LENGTH_SHORT).show();
+        }
+        return result;
+    }
 
 //    public boolean isCartItemExists(long pro_id) {
 //        boolean product_exists = false;
@@ -349,7 +422,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                         new String[]{String.valueOf(orderItem.getId())});
             } catch (SQLException e) {
                 e.printStackTrace();
-                Log.d(TAG, "addToCart: " + e.getMessage());
+                Toast.makeText(mContext, e.getMessage(), Toast.LENGTH_SHORT).show();
             } finally {
                 db.close();
             }
@@ -373,7 +446,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                         new String[]{String.valueOf(orderItem.getId())});
             } catch (SQLException e) {
                 e.printStackTrace();
-                Log.d(TAG, "addToCart: " + e.getMessage());
+                Toast.makeText(mContext, e.getMessage(), Toast.LENGTH_SHORT).show();
             } finally {
                 db.close();
             }
@@ -523,5 +596,81 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
     */
 
+    /*
+    * API CONNECTION SETTING
+    * */
 
+    public long createConnection(String api_url){
+        long result = -1; // id of the row that was inserted
+        SQLiteDatabase db = mDBInstance.getWritableDatabase();
+
+        if (db != null) {
+            ContentValues values = new ContentValues();
+
+            if (api_url.trim() != null || !api_url.isEmpty()) {
+                values.put(KEY_URL_CONNECT, api_url);
+                try {
+                    result = db.insertOrThrow(TABLE_API, null, values);
+                    Log.d(TAG, "createConnection: " +result);
+
+                } catch (SQLException e) {
+                    Log.d(TAG, "createConnection: error in adding " + e.getMessage());
+                    Toast.makeText(mContext, "adding api url connection failed: " +e.getMessage(), Toast.LENGTH_SHORT).show();
+                    e.printStackTrace();
+                } finally {
+                    db.close();
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public int deleteConnection() {
+        SQLiteDatabase db = mDBInstance.getWritableDatabase();
+        int result = db.delete(TABLE_API, null, null);
+        db.close();
+        Log.d(TAG, "delete api Connection " + result);
+        return result;
+    }
+
+    /*public int updateConnection(String api_url){
+        int result = -1;
+        SQLiteDatabase db = mDBInstance.getWritableDatabase();
+
+        if (db != null) {
+            ContentValues values = new ContentValues();
+            values.put(KEY_URL_CONNECT, api_url);
+
+            if (getApiConnection()[0] !=null){
+                try {
+                    result = db.update(TABLE_CART, values, KEY_CART_ID + " = ?",
+                            new String[]{getApiConnection()[0]});
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    Toast.makeText(mContext, "updating api url connection failed: " +e.getMessage(), Toast.LENGTH_SHORT).show();
+                } finally {
+                    db.close();
+                }
+            }
+
+        }
+
+        return result;
+    }
+    */
+
+    public String[] getApiConnection(){
+        SQLiteDatabase db = mDBInstance.getReadableDatabase();
+        String apiProp[] = new String[2];
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_API
+                , null);
+        if (cursor.moveToFirst()) {
+            /*apiProp[0] = String.valueOf(cursor.getInt(cursor.getColumnIndex(KEY_URL_ID)));*/
+            apiProp[1] = cursor.getString(cursor.getColumnIndex(KEY_URL_CONNECT));
+
+        }
+        cursor.close();
+        return apiProp;
+    }
 }

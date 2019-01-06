@@ -59,21 +59,27 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
 
 
             // go to product detail page
-            productViewHolder.mProImg.setOnClickListener(new View.OnClickListener() {
+            productViewHolder.mProImg.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
-                public void onClick(View v) {
+                public boolean onLongClick(View v) {
                     Intent intent = new Intent(mContext, ProductDetails.class);
                     intent.putExtra("parcel_data", currentItem);
                     mContext.startActivity(intent);
+                    return true;
                 }
             });
+
 
             // add up the qty decalared in the cart qty edittext for each click
             productViewHolder.mAddQty.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    int qty = Integer.parseInt(productViewHolder.mQty.getText().toString());
+                    int qty = 0;
+                    if (!productViewHolder.mQty.getText().toString().trim().isEmpty()){
+                        qty = Integer.parseInt(productViewHolder.mQty.getText().toString());
+                    }
                     qty += 1;
+
                     productViewHolder.mQty.setText(String.valueOf(qty));
 
                 }
@@ -83,7 +89,11 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
             productViewHolder.mSubQty.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    int qty = Integer.parseInt(productViewHolder.mQty.getText().toString());
+                    int qty = 0;
+                    if (!productViewHolder.mQty.getText().toString().trim().isEmpty()){
+                        qty = Integer.parseInt(productViewHolder.mQty.getText().toString());
+                    }
+
                     qty -= 1;
                     if (qty < 1){
                         qty = 1;
@@ -101,8 +111,6 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
         }
 
         public class ProductViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-
-
             public View mItemView;
             public ImageView mProImg;
             public TextView mProName;
@@ -154,6 +162,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
 
                     Log.d(TAG, "onClick: " +item);
                     Log.d(TAG, "onClick: order " +order);
+//                    mDBHelper.addToCart(order);
                     mDBHelper.addToCart(order);
                 }
 

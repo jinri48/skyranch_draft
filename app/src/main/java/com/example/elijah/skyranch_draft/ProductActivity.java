@@ -1,44 +1,38 @@
 package com.example.elijah.skyranch_draft;
 
 
-import android.app.SearchManager;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.res.Resources;
-import android.graphics.Rect;
+import android.net.Uri;
 import android.os.Bundle;
-import android.support.design.widget.AppBarLayout;
-import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.util.TypedValue;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
-import com.android.volley.NetworkError;
 import com.android.volley.NetworkResponse;
-import com.android.volley.NoConnectionError;
-import com.android.volley.ParseError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
-import com.android.volley.ServerError;
-import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
@@ -46,11 +40,16 @@ import com.example.elijah.skyranch_draft.activity.PrintActivity;
 import com.example.elijah.skyranch_draft.activity.SalesActivity;
 import com.example.elijah.skyranch_draft.activity.SettingActivity;
 import com.miguelcatalan.materialsearchview.MaterialSearchView;
+//import com.miguelcatalan.materialsearchview.MaterialSearchView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -72,13 +71,16 @@ public class ProductActivity extends AppCompatActivity implements AdapterView.On
 
     private String mQuery = ""; // query for search view
     private String mGroupCode = "";
-    private SearchView mSearchView;
+//    private SearchView mSearchView;
     MaterialSearchView materialSearchView;
 
     ArrayAdapter<ProductGroup> groupAdapter;
     private Spinner spinner_procategory;
     private List<ProductGroup> productGroups;
 
+    private LinearLayout root_layout;
+    private Button btnRefresh;
+    TextView tv_noresults;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,14 +100,26 @@ public class ProductActivity extends AppCompatActivity implements AdapterView.On
         mDBHelper = DatabaseHelper.newInstance(this);
         session = new SessionManager(this);
 
+        if (mDBHelper.getApiConnection()[1] != null){
+            AppConfig.BASE_URL_API = mDBHelper.getApiConnection()[1];
+        }
+
+
+        Log.d(TAG, "initObj: appconfig:  " +AppConfig.BASE_URL_API );
+        root_layout = findViewById(R.id.pl_products);
+
+        btnRefresh  = findViewById(R.id.refresh_products);
         progressBar = findViewById(R.id.progressBar);
-        mRecyclerView = (RecyclerView) findViewById(R.id.rv_products);
+        mRecyclerView =findViewById(R.id.rv_products);
         mListItems = new ArrayList<>();
+
+        tv_noresults = findViewById(R.id.no_res);
 
         // make your container displayed in a linear way
         // LinearLayoutManager llm = new LinearLayoutManager(this);
         // llm.setOrientation(LinearLayoutManager.VERTICAL);
         // mRecyclerView.setLayoutManager(llm);
+
         showProgressView();
         gridLayoutManager = new GridLayoutManager(this, 2);
         mRecyclerView.setLayoutManager(gridLayoutManager);
@@ -140,20 +154,19 @@ public class ProductActivity extends AppCompatActivity implements AdapterView.On
                 mListItems.clear();
                 mAdapter.notifyDataSetChanged();
                 getAllProducts(1, "", mGroupCode);
-                Log.d(TAG, "onSearchViewClosed: " +mListItems);
             }
         });
         materialSearchView.setOnQueryTextListener(new MaterialSearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                if (query != null && !query.isEmpty()){
+                if (query != null){
                     Log.d(TAG, "onQueryTextSubmit: not null or empty" );
                     mQuery = query;
                     mListItems.clear();
                     mAdapter.notifyDataSetChanged();
                     getAllProducts(1, mQuery, mGroupCode);
                 }
-                Log.d(TAG, "onQueryTextSubmit: " +query);
+
 
                 return true;
             }
@@ -161,7 +174,7 @@ public class ProductActivity extends AppCompatActivity implements AdapterView.On
             @Override
             public boolean onQueryTextChange(String newText) {
                 if (newText != null && !newText.isEmpty()){
-                    Log.d(TAG, "onQueryTextChange: " +newText);
+
                 }
                 return true;
             }
@@ -172,11 +185,18 @@ public class ProductActivity extends AppCompatActivity implements AdapterView.On
             public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
                 showProgressView();
                 getAllProducts(page + 1, mQuery, mGroupCode);
-                Log.d(TAG, "onLoadMore: "+mGroupCode);
             }
         };
         mRecyclerView.addOnScrollListener(scrollListener);
-        spinner_procategory.setSelection(57);
+
+
+        btnRefresh.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getAllProducts(1, mQuery, mGroupCode);
+            }
+        });
+
     }
 
     @Override
@@ -214,6 +234,12 @@ public class ProductActivity extends AppCompatActivity implements AdapterView.On
             case R.id.action_sales:
                 intent = new Intent(this, SalesActivity.class);
                 startActivity(intent);
+                return true;
+
+            case R.id.action_refresh:
+                mListItems.clear();
+                mAdapter.notifyDataSetChanged();
+                btnRefresh.performClick();
                 return true;
 
             default:
@@ -273,6 +299,7 @@ public class ProductActivity extends AppCompatActivity implements AdapterView.On
     }
 
     private void getAllProducts(int page_num, String search_item, String group_code) {
+
         final LoginToken user = mDBHelper.getUserToken();
         // redirect to login page
         if (user == null) {
@@ -282,74 +309,108 @@ public class ProductActivity extends AppCompatActivity implements AdapterView.On
         } else {
             Log.d(TAG, "getAllProducts: user " + user);
             showProgressView();
+
             String url = AppConfig.GET_PRODUCTS_BY_BRANCH;
-            String params = "?page=" + page_num
-                    + "&arnoc=" + String.valueOf(user.getBranch())
-                    + "&search_value=" + search_item
-                    + "&group_cat=" +group_code
-                    ;
-            url = url + params;
+            /*to create a query string
+            * url + "?page=1&arnoc=1002&group_cat=1&search_value=tumbler%20dwall"
+            * */
+            Uri builtUri = Uri.parse(url)
+                    .buildUpon()
+                    .appendQueryParameter("page", String.valueOf(page_num))
+                    .appendQueryParameter("arnoc",String.valueOf(user.getBranch()))
+                    .appendQueryParameter("group_cat", group_code.trim())
+                    .appendQueryParameter("search_value", search_item)
+                    .build();
+
+            URL temp_url = null;
+            try {
+                temp_url = new URL(builtUri.toString());
+                url = temp_url.toString();
+            } catch (MalformedURLException e) {
+                Toast.makeText(ProductActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                e.printStackTrace();
+            }
+
+            Log.d(TAG, "getAllProducts: ");
+//            String params = "?page=" + page_num
+//                    + "&arnoc=" + String.valueOf(user.getBranch())
+//                    + "&group_cat=" +group_code.trim()
+//                    + "&search_value=" + search_item
+//                    ;
+//            url = url + params;
+
             Log.d(TAG, "getAllProducts: url" + url);
             JsonObjectRequest jObjreq = new JsonObjectRequest(Request.Method.GET, url, null,
                     new Response.Listener<JSONObject>() {
                         @Override
                         public void onResponse(JSONObject response) {
                             hideProgressView();
+                            tv_noresults.setVisibility(View.GONE);
+
                             try {
                                 if (response.getBoolean("success") == false) {
+
                                     if (response.getInt("status") == 401) {
                                         /*
                                          * TODO: make a dialog that the user is not currently on duty
                                          * */
 
-                                        finish();
+
                                         session.setLogin(false);
                                         mDBHelper.deleteUsers();
                                         mDBHelper.deleteAllItems();
 
                                         Intent intent = new Intent(ProductActivity.this, LoginActivity.class);
                                         startActivity(intent);
+                                        finish();
                                     }
-                                }
-                                if (response.getInt("status") == 200) {
 
-                                    JSONObject data = response.getJSONObject("data");
-                                    JSONArray products = data.getJSONArray("data");
+                                    String message = response.optString("message");
+                                    Toast.makeText(ProductActivity.this, message, Toast.LENGTH_SHORT).show();
+                                }else if (response.getBoolean("success") == true){
+                                    if (response.getInt("status") == 200) {
+                                        JSONObject data = response.getJSONObject("data");
+                                        JSONArray products = data.getJSONArray("data");
+                                            for (int i = 0; i < products.length(); i++) {
+                                                JSONObject item = products.getJSONObject(i);
 
-                                    for (int i = 0; i < products.length(); i++) {
-                                        JSONObject item = products.getJSONObject(i);
+                                                long id = item.getLong("product_id");
+                                                String pro_name = item.getString("product_name");
+                                                String pro_imgUrl = item.getString("img_url");
+                                                Double price = item.getDouble("retail_price");
 
-                                        long id = item.getLong("product_id");
-                                        String pro_name = item.getString("product_name");
-                                        String pro_imgUrl = item.getString("img_url");
-                                        Double price = item.getDouble("retail_price");
-
-                                        long arnoc = item.getLong("arnoc");
-                                        String part_no = item.getString("part_no");
-                                        String group_no = item.getString("group");
-                                        String category = item.getString("category");
-                                        char status = item.getString("status").charAt(0);
-                                        Product product = new Product(id, pro_name, pro_imgUrl, price
-                                                , arnoc, part_no, group_no, category, status
-                                        );
-                                        mListItems.add(product);
+                                                long arnoc = item.getLong("arnoc");
+                                                String part_no = item.getString("part_no");
+                                                String group_no = item.getString("group");
+                                                String category = item.getString("category");
+                                                char status = item.getString("status").charAt(0);
+                                                Product product = new Product(id, pro_name, pro_imgUrl, price
+                                                        , arnoc, part_no, group_no, category, status
+                                                );
+                                                mListItems.add(product);
+                                            }
                                     }
+
                                 }
 
                                 mAdapter.notifyDataSetChanged();
-//                            Log.d(TAG, "onResponse: " +mListItems.toString());
-                            Log.d(TAG, "onResponse: listpro : " +mListItems);
+
+                                Log.d(TAG, "onResponse: listpro : " +mListItems);
 
                             } catch (JSONException e) {
                                 e.printStackTrace();
                                 Log.d("JSON", "onResponse: " + e.getMessage());
+                                Toast.makeText(ProductActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
                             }
 
+                            if (VolleySingleton.prompt !=null){
+                                VolleySingleton.prompt.dismiss();
+                            }
                         }
                     }, new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError error) {
-                    VolleySingleton.showErrors(error, ProductActivity.this);
+                    VolleySingleton.showErrors(error, root_layout, btnRefresh);
                     NetworkResponse response = error.networkResponse;
                     if (response != null && response.data != null) {
                         String errorString = new String(response.data);
@@ -363,12 +424,17 @@ public class ProductActivity extends AppCompatActivity implements AdapterView.On
                     params.put("token", user.getToken());
                     return params;
                 }
+
+
             };
 
-            jObjreq.setRetryPolicy(new DefaultRetryPolicy(
-                    30000,
-                   5,
-                    DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+//            jObjreq.setRetryPolicy(new DefaultRetryPolicy(
+//                    30000,
+//                    5,
+//                    DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+//
+            jObjreq.setRetryPolicy(
+                    new DefaultRetryPolicy(0, -1, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
             mRequestQ.add(jObjreq);
 
         }
@@ -398,6 +464,7 @@ public class ProductActivity extends AppCompatActivity implements AdapterView.On
                                 }
                             }
                             if (response.getInt("status") == 200) {
+                                productGroups.add(new ProductGroup("", "All"));
                                 JSONArray data = response.getJSONArray("data");
 
                                 for (int i = 0; i < data.length(); i++) {
@@ -417,6 +484,7 @@ public class ProductActivity extends AppCompatActivity implements AdapterView.On
                         } catch (JSONException e) {
                             e.printStackTrace();
                             Log.d("JSON", "onResponse: " + e.getMessage());
+                            Toast.makeText(ProductActivity.this,  e.getMessage(), Toast.LENGTH_LONG).show();
                         }
 
                     }
@@ -426,10 +494,7 @@ public class ProductActivity extends AppCompatActivity implements AdapterView.On
                 hideProgressView();
                 VolleySingleton.showErrors(error, ProductActivity.this);
                 NetworkResponse response = error.networkResponse;
-                if (response != null && response.data != null) {
-                    String errorString = new String(response.data);
-                    Toast.makeText(ProductActivity.this, errorString, Toast.LENGTH_LONG).show();
-                }
+
             }
         }) {
             @Override
@@ -442,9 +507,7 @@ public class ProductActivity extends AppCompatActivity implements AdapterView.On
         mRequestQ.add(jObjreq);
     }
 
-    private void initScrollRv(){
 
-    }
 
 
     @Override
@@ -556,7 +619,9 @@ public class ProductActivity extends AppCompatActivity implements AdapterView.On
 //        });
 //    }
 
-
-
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
 }
 

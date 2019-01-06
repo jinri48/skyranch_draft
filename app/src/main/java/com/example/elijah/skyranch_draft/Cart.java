@@ -87,14 +87,24 @@ public class Cart extends BaseActivity {
     private Bitmap bitmap;
     private Customer customer_info;
     TextView tvSelectCust;
+
+
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cart);
 
-
+        layout = findViewById(R.id.pl_cart);
         mDBHelper = DatabaseHelper.newInstance(this);
         session = new SessionManager(this);
+
+        if (mDBHelper.getApiConnection()[1] != null){
+            AppConfig.BASE_URL_API = mDBHelper.getApiConnection()[1];
+
+        }
+        Log.d(TAG, "initObj: appconfig:  " +AppConfig.BASE_URL_API );
+
         mRecyclerView = findViewById(R.id.rv_cart);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mCartItems = new ArrayList<>();
@@ -103,7 +113,7 @@ public class Cart extends BaseActivity {
         mAdapter = new CartAdapter(Cart.this, mCartItems);
         mRecyclerView.setAdapter(mAdapter);
 
-        layout = findViewById(R.id.layout_linear);
+
 
         tvCartPriceTotal = findViewById(R.id.tvCartPriceTotal);
         tvCartPriceTotal.setText("Total: P" + String.format("%,.2f", mAdapter.getTotalItems(mCartItems)));
@@ -130,8 +140,6 @@ public class Cart extends BaseActivity {
                     Toast.makeText(Cart.this, "select a customer first", Toast.LENGTH_SHORT).show();
                     return;
                 }
-
-
                 if (mCartItems.size() > 0) {
                     Toast.makeText(Cart.this, "selected customer is: " +customer_info.getName(), Toast.LENGTH_SHORT).show();
                     tvPlaceHolder.setEnabled(false);
@@ -176,23 +184,6 @@ public class Cart extends BaseActivity {
                 }
             }
         });
-    }
-
-
-    private boolean hasLoadWalletItem(ArrayList<OrderItem> orders ){
-        boolean hasLoadWallet = false;
-
-        for (OrderItem item : orders){
-            Log.d(TAG, "hasLoadWalletItem: " + item);
-
-            if (item.getProduct().getName().toLowerCase().contains("wallet load")){
-                hasLoadWallet = true;
-                break;
-            }
-        }
-
-        Toast.makeText(Cart.this, "has wallet load " +hasLoadWallet, Toast.LENGTH_SHORT).show();
-        return hasLoadWallet;
     }
 
     private void placeOrderWithReceipt() {
@@ -256,10 +247,10 @@ public class Cart extends BaseActivity {
         }
     }
 
-    public void generateBarcode(String barcode_data){
+    public void generateBarcode(String barcode_data, BarcodeFormat format){
         MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
         try {
-            BitMatrix bitMatrix = multiFormatWriter.encode(barcode_data, BarcodeFormat.CODE_39,384,100);
+            BitMatrix bitMatrix = multiFormatWriter.encode(barcode_data, format,384,100);
             BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
             Bitmap bitmap = barcodeEncoder.createBitmap(bitMatrix);
             this.bitmap = bitmap;
@@ -270,15 +261,29 @@ public class Cart extends BaseActivity {
 
     }
 
-    private void printReceipt(){
+    private void printReceipt(BarcodeFormat format){
         if(baseApp.isAidl()){
             boolean isBold = true;
             boolean isUnderLine = false;
-            String content = customer_info.getId()+"-"+customer_info.getName();
-            AidlUtil.getInstance().printText("Enchanted Kingdom", 32, isBold, isUnderLine);
-            AidlUtil.getInstance().printBitmapCust(this.bitmap, 1, this.barcodeTxt+"\n", content,
-                    customer_info.getMobile());
 
+            if (format == BarcodeFormat.CODE_39){
+                AidlUtil.getInstance().printText("Enchanted Kingdom", 32, isBold, isUnderLine);
+                String content = customer_info.getId()+" - "+customer_info.getName();
+                AidlUtil.getInstance().printBitmapCust(this.bitmap, 1, this.barcodeTxt+"\n", content,
+                        customer_info.getMobile());
+
+            }else if (format == BarcodeFormat.QR_CODE){
+                Log.d(TAG, "printReceipt: custmob " +customer_info.getMobile());
+                String content = customer_info.getId()+"-"+customer_info.getName();
+
+                AidlUtil.getInstance().printText("Enchanted Kingdom", 32, isBold, isUnderLine);
+                AidlUtil.getInstance().printQr(this.barcodeTxt, 7, 3 );
+                AidlUtil.getInstance().printTextCust("Order Slip No: " +this.barcodeTxt, 28, isBold, isUnderLine);
+                AidlUtil.getInstance().printTextCust(customer_info.getMobile(), 25, false, isUnderLine);
+                AidlUtil.getInstance().printTextCust("Customer: " +content +"\n", 25, false, isUnderLine);
+
+
+            }
 
         }
       else {
@@ -319,6 +324,7 @@ public class Cart extends BaseActivity {
             startActivity(intent);
         }
         String url = AppConfig.ADD_CART_ITEMS;
+        Log.d(TAG, "addOrder: url " +url);
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, getPlacedOrders(),
                 new Response.Listener<JSONObject>() {
                     @Override
@@ -329,24 +335,38 @@ public class Cart extends BaseActivity {
 
                         try {
                             int status_code = response.getInt("status");
-
-                            if (status_code == 200) {
-                                String order_header = response.getString("order_header");
-                                mDBHelper.deleteAllItems();
-                                mCartItems.clear();
-                                mAdapter.notifyDataSetChanged();
-                                tvCartPriceTotal.setText("Total: P" + String.format("%,.2f", mAdapter.getTotalItems(mCartItems)));
-                                tvSelectCust.setText(R.string.tapto_select_cust);
-                                Toast.makeText(Cart.this, "Successfully submitted the order", Toast.LENGTH_SHORT).show();
-
-                                if(noReceipt == false){ // can issue a receipt or order slip
-                                    setPrintAlignment();
-                                    generateBarcode(order_header);
-                                    printReceipt();
+                            if (response.getBoolean("success") == false) {
+                                if (response.getInt("status") == 401) {
+                                    /*todo add redirect to login */
+                                    Toast.makeText(Cart.this, response.getString("message"), Toast.LENGTH_LONG).show();
+                                }else{
+                                    Toast.makeText(Cart.this, response.getString("message"), Toast.LENGTH_LONG).show();
                                 }
-                                customer_info = null;
-                                session.setCustomer(null);
+
                             }
+                            else if (response.getBoolean("success") == true){
+                                if (status_code == 200) {
+                                    String order_header = response.getString("order_header");
+                                    mDBHelper.deleteAllItems();
+                                    mCartItems.clear();
+                                    mAdapter.notifyDataSetChanged();
+                                    tvCartPriceTotal.setText("Total: P" + String.format("%,.2f", mAdapter.getTotalItems(mCartItems)));
+                                    tvSelectCust.setText(R.string.tapto_select_cust);
+                                    Toast.makeText(Cart.this, "Successfully submitted the order", Toast.LENGTH_SHORT).show();
+
+                                    if(noReceipt == false){ // can issue a receipt or order slip
+                                        setPrintAlignment();
+//                                    generateBarcode(order_header);
+//                                    printReceipt();
+                                        generateBarcode(order_header, BarcodeFormat.QR_CODE);
+                                        printReceipt(BarcodeFormat.QR_CODE);
+                                    }
+                                    customer_info = null;
+                                    session.setCustomer(null);
+                                }
+
+                            }
+
                             Log.d(TAG, "onResponse: placed order status code: " + status_code);
                         } catch (JSONException e) {
 
@@ -362,11 +382,9 @@ public class Cart extends BaseActivity {
                     public void onErrorResponse(VolleyError error) {
                         tvPlaceHolder.setEnabled(true);
                         tvPlaceHolder.setText("Place Order");
-                        NetworkResponse response = error.networkResponse;
-                        Log.d(TAG, "onErrorResponse: network response - " + response);
-                        Log.d(TAG, "onErrorResponse: error - " + error);
 
-                        VolleySingleton.showErrors(error, Cart.this);
+                        NetworkResponse response = error.networkResponse;
+                        VolleySingleton.showErrors(error, layout, tvPlaceHolder);
                         String errorMsg = error.getMessage();
                         if (response != null && response.data != null) {
                             String errorString = new String(response.data);
@@ -422,6 +440,10 @@ public class Cart extends BaseActivity {
             Log.d(TAG, "onClick placedOrders error " + e.getMessage());
         }
         return cart;
+    }
+
+    private void showAlertDialog(){
+
     }
 
     @Override

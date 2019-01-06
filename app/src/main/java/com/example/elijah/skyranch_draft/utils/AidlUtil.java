@@ -190,7 +190,7 @@ public class AidlUtil {
         try {
 		    woyouService.setAlignment(1, null);
             woyouService.printQRCode(data, modulesize, errorlevel, null);
-            woyouService.lineWrap(3, null);
+            woyouService.lineWrap(2, null);
         } catch (RemoteException e) {
             e.printStackTrace();
         }
@@ -291,6 +291,7 @@ public class AidlUtil {
         }
     }
 
+    /*customize prints*/
 
     public void printBitmapCust(Bitmap bitmap, int orientation, String text, String text2, String text3) {
         if (woyouService == null) {
@@ -320,6 +321,35 @@ public class AidlUtil {
             e.printStackTrace();
         }
     }
+
+    public void printTextCust(String content, float size, boolean isBold, boolean isUnderLine) {
+        if (woyouService == null) {
+            Toast.makeText(context,R.string.toast_2,Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        try {
+            if (isBold) {
+                woyouService.sendRAWData(com.sunmi.printerhelper.utils.ESCUtil.boldOn(), null);
+            } else {
+                woyouService.sendRAWData(com.sunmi.printerhelper.utils.ESCUtil.boldOff(), null);
+            }
+
+            if (isUnderLine) {
+                woyouService.sendRAWData(com.sunmi.printerhelper.utils.ESCUtil.underlineWithOneDotWidthOn(), null);
+            } else {
+                woyouService.sendRAWData(com.sunmi.printerhelper.utils.ESCUtil.underlineOff(), null);
+            }
+
+            woyouService.printTextWithFont(content, null, size, null);
+            woyouService.lineWrap(1, null);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
     /**
      * 打印表格
      */

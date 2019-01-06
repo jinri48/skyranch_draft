@@ -14,7 +14,6 @@ public class LoginToken implements Parcelable {
     private long branch;
 
 
-
     public LoginToken(String id, String token, String name, long branch) {
         this.id = id;
         this.token = token;

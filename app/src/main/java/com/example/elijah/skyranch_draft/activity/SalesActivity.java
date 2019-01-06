@@ -1,17 +1,21 @@
 package com.example.elijah.skyranch_draft.activity;
 
 import android.content.Intent;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,11 +29,13 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.elijah.skyranch_draft.AppConfig;
+import com.example.elijah.skyranch_draft.Cart;
 import com.example.elijah.skyranch_draft.Customer;
 import com.example.elijah.skyranch_draft.CustomerAdapter;
 import com.example.elijah.skyranch_draft.DatabaseHelper;
 import com.example.elijah.skyranch_draft.EndlessRecyclerViewScrollListener;
 import com.example.elijah.skyranch_draft.LoginActivity;
+import com.example.elijah.skyranch_draft.LoginToken;
 import com.example.elijah.skyranch_draft.OrderHeader;
 import com.example.elijah.skyranch_draft.OrderItem;
 import com.example.elijah.skyranch_draft.Product;
@@ -74,64 +80,102 @@ public class SalesActivity extends AppCompatActivity {
     private String custname ="";
     private long os_no = -1;
     ProgressBar pbSales;
-
+    private RelativeLayout root_layout;
+    EditText searchtxt;
+    private Button refresh;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sales);
+
+        root_layout = findViewById(R.id.pl_sales);
+
         mRequestQ = Volley.newRequestQueue(this);
         mDBHelper = DatabaseHelper.newInstance(this);
         session = new SessionManager(this);
 
+        if (mDBHelper.getApiConnection()[1] != null){
+            AppConfig.BASE_URL_API = mDBHelper.getApiConnection()[1];
+        }
 
-        Button btnFilter = findViewById(R.id.btn_filterSales);
-        expFilterContainer = findViewById(R.id.exp_filter);
-        final EditText searchtxt = findViewById(R.id.search_sales);
+        expFilterContainer          = findViewById(R.id.exp_filter);
+        Button btnFilter            = findViewById(R.id.btn_filterSales);
+        searchtxt                   = findViewById(R.id.search_sales);
         btnFilter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 expFilterContainer.toggle();
             }
         });
-        pbSales = findViewById(R.id.pBSales);
 
         dateStart = "2018-12-10";
         dateEnd = "2018-12-10";
-
+        pbSales        = findViewById(R.id.pBSales);
         tv_totalAmount = findViewById(R.id.sales_total);
         tv_date        = findViewById(R.id.sales_date);
         salesStat      = findViewById(R.id.sales_stat);
-
         history = new SalesHistory();
 
-        getTotal();
+        searchtxt.setOnEditorActionListener(new TextView.OnEditorActionListener() {
 
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_ACTION_GO || event.getAction() == KeyEvent.ACTION_DOWN){
+                    if (v.getText().toString().trim().isEmpty()){
+                        custname = "";
+                        getSales(page,custname, -1);
+                    }else{
+                        custname = v.getText().toString().trim();
+                        getSales(page, custname, -1);
+                    }
+                    return true;
+                }
+                return false;
+            }
+        });
+
+
+        getTotal();
         mRv_SalesHist = findViewById(R.id.rv_sales);
         LinearLayoutManager llm = new LinearLayoutManager(this);
         mRv_SalesHist.setLayoutManager(llm);
-
-        getSales(1,"", -1);
+        custname = searchtxt.getText().toString().trim();
+        getSales(this.page,custname, -1);
         mSalesAdapter = new SalesHistoryAdapter(SalesActivity.this, history);
         mRv_SalesHist.setAdapter(mSalesAdapter);
 
         populateSpinnerStat();
+
+        refresh = findViewById(R.id.refresh_sales);
+        refresh.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getTotal();
+                custname = "";
+                getSales(page, custname, -1);
+
+            }
+        });
+
         /*
-        salesStat.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String item = parent.getItemAtPosition(position).toString();
+            salesStat.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    String item = parent.getItemAtPosition(position).toString();
 
-            }
+                }
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
 
-            }
-        });*/
+                }
+            });
+        */
 
         /*
         TODO ADD SCROLLLISTERNER
         * */
+
         /*scrollListener = new EndlessRecyclerViewScrollListener(llm) {
             @Override
             public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
@@ -141,9 +185,19 @@ public class SalesActivity extends AppCompatActivity {
             }
         };
         mRv_SalesHist.addOnScrollListener(scrollListener);*/
+
+
     }
 
     public void getTotal() {
+        final LoginToken user = mDBHelper.getUserToken();
+        if (user == null) {
+            Log.d(TAG, "getAllProducts: user is null");
+            Intent intent = new Intent(SalesActivity.this, LoginActivity.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
         String url = AppConfig.GET_SALES_TOTAL ;
         JsonObjectRequest jObjreq = new JsonObjectRequest(Request.Method.POST, url,
                 getSalesReq(1, "", -1),
@@ -176,18 +230,23 @@ public class SalesActivity extends AppCompatActivity {
                                 tv_date.setText("As of " +data.getString("from"));
                             }
 
+
+                            if (VolleySingleton.prompt !=null){
+                                VolleySingleton.prompt.dismiss();
+                            }
+
                             // notify the adapter
                         } catch (JSONException e) {
                             e.printStackTrace();
                             Log.d("JSON", "onResponse: " + e.getMessage());
-                            Toast.makeText(SalesActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                            Snackbar.make(root_layout, e.getMessage(), Snackbar.LENGTH_SHORT).show();
                         }
 
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                VolleySingleton.showErrors(error, SalesActivity.this);
+                VolleySingleton.showErrors(error, root_layout, refresh);
                 NetworkResponse response = error.networkResponse;
                 pbSales.setVisibility(View.GONE);
                 if (response != null && response.data != null) {
@@ -200,7 +259,7 @@ public class SalesActivity extends AppCompatActivity {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 Map<String, String> params = new HashMap<String, String>();
-//                params.put("token", user.getToken());
+                params.put("token", user.getToken());
                 return params;
             }
 
@@ -211,6 +270,14 @@ public class SalesActivity extends AppCompatActivity {
 
 
     public void getSales(int page,String custname, long os_no) {
+        final LoginToken user = mDBHelper.getUserToken();
+        if (user == null) {
+            Log.d(TAG, "getAllProducts: user is null");
+            Intent intent = new Intent(SalesActivity.this, LoginActivity.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
         String url = AppConfig.GET_SALES_HISTORY;
         JsonObjectRequest jObjreq = new JsonObjectRequest(Request.Method.POST, url,
                 getSalesReq(page, custname, os_no),
@@ -278,10 +345,12 @@ public class SalesActivity extends AppCompatActivity {
 
                             // notify the adapter
                             mSalesAdapter.notifyDataSetChanged();
+                            if (VolleySingleton.prompt !=null){
+                                VolleySingleton.prompt.dismiss();
+                            }
                         } catch (JSONException e) {
                             e.printStackTrace();
-                            Log.d("JSON", "onResponse: " + e.getMessage());
-                            Toast.makeText(SalesActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                            Snackbar.make(root_layout, e.getMessage(), Toast.LENGTH_SHORT).show();
                         }
 
                     }
@@ -289,9 +358,9 @@ public class SalesActivity extends AppCompatActivity {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Log.d(TAG, "onErrorResponse: " +error.getMessage());
-                VolleySingleton.showErrors(error, SalesActivity.this);
+                VolleySingleton.showErrors(error, root_layout, refresh);
                 NetworkResponse response = error.networkResponse;
-                if (response != null && response.data != null) {
+                if (response != null || response.data != null) {
                     String errorString = new String(response.data);
                     Toast.makeText(SalesActivity.this, errorString, Toast.LENGTH_LONG).show();
                 }
@@ -301,7 +370,7 @@ public class SalesActivity extends AppCompatActivity {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 Map<String, String> params = new HashMap<String, String>();
-//                params.put("token", user.getToken());
+                params.put("token", user.getToken());
                 return params;
             }
 
@@ -316,8 +385,6 @@ public class SalesActivity extends AppCompatActivity {
         try {
             params.put("from", dateStart);
             params.put("to", dateEnd);
-            params.put("cce_num", "99");
-            params.put("cce_branch", "1002");
             params.put("isToday", 1);
             params.put("page", page);
             params.put("customer_name", custname);
