@@ -24,6 +24,7 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -48,6 +49,7 @@ import com.google.gson.JsonParser;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -88,7 +90,7 @@ public class Cart extends BaseActivity {
     private Customer customer_info;
     TextView tvSelectCust;
 
-
+    ScrollView root_layout_dialog;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -184,6 +186,9 @@ public class Cart extends BaseActivity {
                 }
             }
         });
+
+
+       
     }
 
     private void placeOrderWithReceipt() {
@@ -250,11 +255,18 @@ public class Cart extends BaseActivity {
     public void generateBarcode(String barcode_data, BarcodeFormat format){
         MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
         try {
-            BitMatrix bitMatrix = multiFormatWriter.encode(barcode_data, format,384,100);
+            int width = 384;
+            int height = 100;
+            if (format == BarcodeFormat.QR_CODE) {
+                width = 250;
+                height = 250;
+            }
+            BitMatrix bitMatrix = multiFormatWriter.encode(barcode_data, format,width,height);
             BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
             Bitmap bitmap = barcodeEncoder.createBitmap(bitMatrix);
             this.bitmap = bitmap;
             this.barcodeTxt = barcode_data;
+
         } catch (WriterException e) {
             e.printStackTrace();
         }
@@ -268,7 +280,7 @@ public class Cart extends BaseActivity {
 
             if (format == BarcodeFormat.CODE_39){
                 AidlUtil.getInstance().printText("Enchanted Kingdom", 32, isBold, isUnderLine);
-                String content = customer_info.getId()+" - "+customer_info.getName();
+                String content = customer_info.getId()+" - "+customer_info.getName() +"\n";
                 AidlUtil.getInstance().printBitmapCust(this.bitmap, 1, this.barcodeTxt+"\n", content,
                         customer_info.getMobile());
 
@@ -353,14 +365,14 @@ public class Cart extends BaseActivity {
                                     tvCartPriceTotal.setText("Total: P" + String.format("%,.2f", mAdapter.getTotalItems(mCartItems)));
                                     tvSelectCust.setText(R.string.tapto_select_cust);
                                     Toast.makeText(Cart.this, "Successfully submitted the order", Toast.LENGTH_SHORT).show();
-
+                                    generateBarcode(order_header, BarcodeFormat.QR_CODE);
                                     if(noReceipt == false){ // can issue a receipt or order slip
                                         setPrintAlignment();
 //                                    generateBarcode(order_header);
 //                                    printReceipt();
-                                        generateBarcode(order_header, BarcodeFormat.QR_CODE);
                                         printReceipt(BarcodeFormat.QR_CODE);
                                     }
+                                    showAlertDialogOrder(order_header);
                                     customer_info = null;
                                     session.setCustomer(null);
                                 }
@@ -442,8 +454,45 @@ public class Cart extends BaseActivity {
         return cart;
     }
 
-    private void showAlertDialog(){
+    public void showAlertDialogOrder(String or_no){
+        AlertDialog.Builder builder = new AlertDialog.Builder(Cart.this);
+        View sales_order_dialog = getLayoutInflater()
+                .inflate(R.layout.sales_order, null);
+        root_layout_dialog = sales_order_dialog.findViewById(R.id.pl_sales_or_dialog);
 
+        ImageView qr_img = root_layout_dialog.findViewById(R.id.iv_qr_code);
+        TextView or_num = root_layout_dialog.findViewById(R.id.tv_or_no);
+        TextView customer_mobile = root_layout_dialog.findViewById(R.id.cust_mobile);
+        TextView customer_number = root_layout_dialog.findViewById(R.id.cust_num);
+        TextView customer_name = root_layout_dialog.findViewById(R.id.CUST_name);
+        Button btn_ok = root_layout_dialog.findViewById(R.id.btn_ok);
+
+        or_num.setText("Order Slip No: " + or_no);
+        qr_img.setImageBitmap(this.bitmap);
+        String name = "";
+        if (customer_info.getName() == null){
+            name = customer_info.getLname() + " " +customer_info.getFname();
+        }else{
+            name = customer_info.getName();
+        }
+        Log.d(TAG, "showAlertDialogOrder: " +name);
+
+        customer_mobile.setText("Mobile Number: " +customer_info.getMobile());
+        customer_number.setText("No: " +String.valueOf(customer_info.getId()));
+        customer_name.setText("Name: " +name);
+
+        builder.setView(sales_order_dialog);
+        final AlertDialog dialog  = builder.create();
+
+        btn_ok.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                dialog.dismiss();
+
+            }
+        });
+        dialog.show();
     }
 
     @Override

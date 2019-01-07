@@ -1,5 +1,7 @@
 package com.example.elijah.skyranch_draft.activity;
 
+import android.app.ActivityManager;
+import android.content.Context;
 import android.content.Intent;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -54,6 +56,7 @@ import org.json.JSONObject;
 import java.util.AbstractQueue;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import sunmi.sunmiui.edit.Edit;
@@ -150,6 +153,7 @@ public class SalesActivity extends AppCompatActivity {
         refresh.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 getTotal();
                 custname = "";
                 getSales(page, custname, -1);
@@ -187,7 +191,10 @@ public class SalesActivity extends AppCompatActivity {
         mRv_SalesHist.addOnScrollListener(scrollListener);*/
 
 
+
     }
+
+
 
     public void getTotal() {
         final LoginToken user = mDBHelper.getUserToken();
@@ -198,6 +205,7 @@ public class SalesActivity extends AppCompatActivity {
             finish();
             return;
         }
+
         String url = AppConfig.GET_SALES_TOTAL ;
         JsonObjectRequest jObjreq = new JsonObjectRequest(Request.Method.POST, url,
                 getSalesReq(1, "", -1),
@@ -270,12 +278,14 @@ public class SalesActivity extends AppCompatActivity {
 
 
     public void getSales(int page,String custname, long os_no) {
+        pbSales.setVisibility(View.VISIBLE);
         final LoginToken user = mDBHelper.getUserToken();
         if (user == null) {
+            finish();
             Log.d(TAG, "getAllProducts: user is null");
             Intent intent = new Intent(SalesActivity.this, LoginActivity.class);
             startActivity(intent);
-            finish();
+
             return;
         }
         String url = AppConfig.GET_SALES_HISTORY;
@@ -344,6 +354,7 @@ public class SalesActivity extends AppCompatActivity {
                             }
 
                             // notify the adapter
+                            pbSales.setVisibility(View.GONE);
                             mSalesAdapter.notifyDataSetChanged();
                             if (VolleySingleton.prompt !=null){
                                 VolleySingleton.prompt.dismiss();
@@ -360,7 +371,7 @@ public class SalesActivity extends AppCompatActivity {
                 Log.d(TAG, "onErrorResponse: " +error.getMessage());
                 VolleySingleton.showErrors(error, root_layout, refresh);
                 NetworkResponse response = error.networkResponse;
-                if (response != null || response.data != null) {
+                if (response != null && response.data != null) {
                     String errorString = new String(response.data);
                     Toast.makeText(SalesActivity.this, errorString, Toast.LENGTH_LONG).show();
                 }

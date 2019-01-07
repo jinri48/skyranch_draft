@@ -193,6 +193,7 @@ public class ProductActivity extends AppCompatActivity implements AdapterView.On
         btnRefresh.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                getAllProductGroups();
                 getAllProducts(1, mQuery, mGroupCode);
             }
         });
