@@ -321,17 +321,11 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
                             customer.setBday(bday);
                             customer.setMobile(mobile);
                             JSONObject user = item.optJSONObject("user");
-                            String email = "N/A";
-
-
                             if (user != null) {
-                                if (user.getString("email") != null){
-                                    email = user.getString("email");
-                                    Log.d(TAG, "onResponse: email " +email);
-                                }
-
+                                String email = user.isNull("email") ? "N/A" : user.getString("email");
+                                customer.setEmail(email);
                             }
-                            customer.setEmail(email);
+
                             mCustList.add(customer);
 
                         }

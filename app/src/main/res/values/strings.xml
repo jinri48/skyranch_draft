@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">skyranch_draft</string>
+    <string name="app_name">EK Mobile</string>
     <string name="action_settings">Settings</string>
     <string name="action_add_favourite">Add to Favourites</string>
     <string name="action_play_next">Play Next</string>
@@ -64,5 +64,6 @@
     <string name="hint_mobile_temp">Temporary Mobile Number</string>
     <string name="retry">Retry</string>
     <string name="api_url">Api</string>
+    <string name="no_res">No results found</string>
 
 </resources>

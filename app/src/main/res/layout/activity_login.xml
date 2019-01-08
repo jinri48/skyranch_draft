@@ -5,7 +5,9 @@
     android:layout_height="match_parent"
     android:layout_gravity="center"
     android:fitsSystemWindows="true"
-    tools:context=".LoginActivity">
+    tools:context=".LoginActivity"
+    android:id="@+id/pl_login"
+    >
 
     <RelativeLayout
         android:layout_width="match_parent"

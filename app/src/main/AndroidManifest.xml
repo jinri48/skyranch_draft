@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.example.elijah.skyranch_draft">
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -8,11 +9,12 @@
     <application
         android:name=".BaseApp"
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_hat"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/ic_hat_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        tools:replace="android:icon">
         <activity android:name=".MainActivity" />
         <activity android:name=".SecondScreen" />
         <activity android:name=".ProductActivity" />
@@ -44,17 +46,21 @@
             android:parentActivityName=".ProductActivity"
             android:theme="@style/WithActionbar" />
 
+        <activity android:name=".activity.CustomerActivity" />
+        <activity android:name=".BaseUrlActivity" />
+        <activity android:name=".activity.SalesActivity" />
+        <activity android:name=".activity.OrderDetailsActivity" android:label="Order Details" android:theme="@style/WithActionbar"></activity>
+
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
         <meta-data
             android:name="com.google.android.gms.DEPENDENCIES"
             android:value="barcode" />
-
-        <activity android:name=".activity.CustomerActivity" />
-        <activity android:name=".BaseUrlActivity" />
-        <activity android:name=".activity.SalesActivity" />
-        <activity android:name=".activity.OrderDetailsActivity" android:label="Order Details" android:theme="@style/WithActionbar"></activity>
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="80216c47f4e68f4a545e2f5891dba5f124f2a013"
+            />
     </application>
 
 </manifest>

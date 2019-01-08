@@ -3,21 +3,26 @@ package com.example.elijah.skyranch_draft.activity;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -31,11 +36,13 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.elijah.skyranch_draft.AppConfig;
+import com.example.elijah.skyranch_draft.BaseApp;
 import com.example.elijah.skyranch_draft.Cart;
 import com.example.elijah.skyranch_draft.Customer;
 import com.example.elijah.skyranch_draft.CustomerAdapter;
 import com.example.elijah.skyranch_draft.DatabaseHelper;
 import com.example.elijah.skyranch_draft.EndlessRecyclerViewScrollListener;
+import com.example.elijah.skyranch_draft.Interface.SalesHistoryAdapterListener;
 import com.example.elijah.skyranch_draft.LoginActivity;
 import com.example.elijah.skyranch_draft.LoginToken;
 import com.example.elijah.skyranch_draft.OrderHeader;
@@ -47,7 +54,15 @@ import com.example.elijah.skyranch_draft.SessionManager;
 import com.example.elijah.skyranch_draft.VolleySingleton;
 import com.example.elijah.skyranch_draft.adapter.SalesHistoryAdapter;
 import com.example.elijah.skyranch_draft.model.SalesHistory;
+import com.example.elijah.skyranch_draft.utils.AidlUtil;
+import com.example.elijah.skyranch_draft.utils.BluetoothUtil;
 import com.github.aakira.expandablelayout.ExpandableRelativeLayout;
+import com.google.android.gms.vision.barcode.Barcode;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.journeyapps.barcodescanner.BarcodeEncoder;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -61,7 +76,7 @@ import java.util.Map;
 
 import sunmi.sunmiui.edit.Edit;
 
-public class SalesActivity extends AppCompatActivity {
+public class SalesActivity extends BaseActivity {
     private RequestQueue mRequestQ; // network calls suing volley
     private DatabaseHelper mDBHelper;
     private SessionManager session;
@@ -86,11 +101,17 @@ public class SalesActivity extends AppCompatActivity {
     private RelativeLayout root_layout;
     EditText searchtxt;
     private Button refresh;
+
+    public static BaseApp base;
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sales);
 
+        base = baseApp;
         root_layout = findViewById(R.id.pl_sales);
 
         mRequestQ = Volley.newRequestQueue(this);
@@ -144,7 +165,17 @@ public class SalesActivity extends AppCompatActivity {
         mRv_SalesHist.setLayoutManager(llm);
         custname = searchtxt.getText().toString().trim();
         getSales(this.page,custname, -1);
-        mSalesAdapter = new SalesHistoryAdapter(SalesActivity.this, history);
+        mSalesAdapter = new SalesHistoryAdapter(SalesActivity.this, history, new SalesHistoryAdapterListener() {
+            @Override
+            public void viewORDialog(View v, int position) {
+                showORDialog(SalesActivity.this,  history.getOrders().get(position), false);
+            }
+
+            @Override
+            public void printORDialog(View v, int position) {
+                SalesActivity.printReceipt(BarcodeFormat.QR_CODE, history.getOrders().get(position));
+            }
+        });
         mRv_SalesHist.setAdapter(mSalesAdapter);
 
         populateSpinnerStat();
@@ -338,6 +369,7 @@ public class SalesActivity extends AppCompatActivity {
 
                                     Customer customer = new Customer();
                                     customer.setId(customerObj.optInt("id", 0));
+                                    Log.d(TAG, "onResponse: customer "+customerObj);
                                     String custName = customerObj.isNull("name") ? "N/A" : customerObj.getString("name");
                                     String custMob = customerObj.isNull("mobile_num") ? "N/A" : customerObj.getString("mobile_num");
                                     customer.setName(custName);
@@ -424,6 +456,154 @@ public class SalesActivity extends AppCompatActivity {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         salesStat.setAdapter(adapter);
     }
+
+
+
+    /*======================================*/
+    public static Bitmap generateBarcode(String barcode_data, BarcodeFormat format){
+        Bitmap barcodeImg = null;
+        MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
+        try {
+            int width = 384;
+            int height = 100;
+            if (format == BarcodeFormat.QR_CODE) {
+                width = 250;
+                height = 250;
+            }
+            BitMatrix bitMatrix = multiFormatWriter.encode(barcode_data, format,width,height);
+            BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
+            Bitmap bitmap = barcodeEncoder.createBitmap(bitMatrix);
+            barcodeImg = bitmap;
+
+        } catch (WriterException e) {
+            e.printStackTrace();
+        }
+
+        return barcodeImg;
+    }
+
+
+    public static void printReceipt(BarcodeFormat format, OrderHeader order){
+        if(base.isAidl()){
+            boolean isBold = true;
+            boolean isUnderLine = false;
+
+            Customer customer_info = order.getCustomer();
+
+            if (format == BarcodeFormat.CODE_39){
+                if (generateBarcode(String.valueOf(order.getOr_no()), BarcodeFormat.CODE_39) != null){
+                    Bitmap bitmap = generateBarcode(String.valueOf(order.getOr_no()), BarcodeFormat.CODE_39);
+                    AidlUtil.getInstance().printText("Enchanted Kingdom", 32, isBold, isUnderLine);
+                    String content = customer_info.getId()+" - "+customer_info.getName() +"\n";
+                    AidlUtil.getInstance().printBitmapCust(bitmap, 1, order.getOr_no()+"\n", content,
+                            customer_info.getMobile());
+                }
+
+            }else if (format == BarcodeFormat.QR_CODE){
+                Log.d(TAG, "printReceipt: custmob " +customer_info.getMobile());
+                String content = customer_info.getId()+"-"+customer_info.getName();
+                AidlUtil.getInstance().printText("Enchanted Kingdom", 32, isBold, isUnderLine);
+                AidlUtil.getInstance().printQr(String.valueOf(order.getOr_no()), 7, 3 );
+                AidlUtil.getInstance().printTextCust("Order Slip No: " +order.getOr_no(), 28, isBold, isUnderLine);
+                AidlUtil.getInstance().printTextCust(customer_info.getMobile(), 25, false, isUnderLine);
+                AidlUtil.getInstance().printTextCust("Customer: " +content +"\n", 25, false, isUnderLine);
+            }
+
+        }
+        else {
+//            if(mytype == 0){
+//                if(mCheckBox1.isChecked() && mCheckBox2.isChecked()){
+//                    BluetoothUtil.sendData(com.sunmi.printerhelper.utils.ESCUtil.printBitmap(bitmap1, 3));
+//                }else if(mCheckBox1.isChecked()){
+//                    BluetoothUtil.sendData(com.sunmi.printerhelper.utils.ESCUtil.printBitmap(bitmap1, 1));
+//                }else if(mCheckBox2.isChecked()){
+//                    BluetoothUtil.sendData(com.sunmi.printerhelper.utils.ESCUtil.printBitmap(bitmap1, 2));
+//                }else{
+//                    BluetoothUtil.sendData(com.sunmi.printerhelper.utils.ESCUtil.printBitmap(bitmap1, 0));
+//                }
+//            }else if(mytype == 1){
+//                BluetoothUtil.sendData(com.sunmi.printerhelper.utils.ESCUtil.selectBitmap(bitmap1, 0));
+//            }else if(mytype == 2){
+//                BluetoothUtil.sendData(com.sunmi.printerhelper.utils.ESCUtil.selectBitmap(bitmap1, 1));
+//            }else if(mytype == 3){
+//                BluetoothUtil.sendData(com.sunmi.printerhelper.utils.ESCUtil.selectBitmap(bitmap1, 32));
+//            }else if(mytype == 4){
+//                BluetoothUtil.sendData(com.sunmi.printerhelper.utils.ESCUtil.selectBitmap(bitmap1, 33));
+//            }
+//
+//            BluetoothUtil.sendData(com.sunmi.printerhelper.utils.ESCUtil.nextLine(3));
+        }
+    }
+
+    public void setPrintAlignment(){
+        byte[] send;
+        send = com.sunmi.printerhelper.utils.ESCUtil.alignCenter();
+        if (baseApp.isAidl()) {
+            AidlUtil.getInstance().sendRawData(send);
+        } else {
+            BluetoothUtil.sendData(send);
+        }
+    }
+
+    public static void showORDialog(Context context, final OrderHeader order, boolean withPrintBtn){
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        LayoutInflater factory = LayoutInflater.from(context);
+        View order_slip_dialog = factory.inflate(R.layout.sales_order, null);
+        builder.setView(order_slip_dialog);
+        ScrollView root_layout_dialog   = order_slip_dialog.findViewById(R.id.pl_sales_or_dialog);
+        ImageView qr_img                = root_layout_dialog.findViewById(R.id.iv_qr_code);
+        TextView or_num                 = root_layout_dialog.findViewById(R.id.tv_or_no);
+        TextView customer_mobile        = root_layout_dialog.findViewById(R.id.cust_mobile);
+        TextView customer_number        = root_layout_dialog.findViewById(R.id.cust_num);
+        TextView customer_name          = root_layout_dialog.findViewById(R.id.CUST_name);
+        Button btn_ok                   = root_layout_dialog.findViewById(R.id.btn_ok);
+        Button btn_print                = root_layout_dialog.findViewById(R.id.btn_print);
+
+        or_num.setText("Order Slip No: " + order.getOr_no());
+        Bitmap bitmap = generateBarcode(String.valueOf(order.getOr_no()), BarcodeFormat.QR_CODE);
+        if (bitmap !=null){
+            qr_img.setImageBitmap(bitmap);
+        }
+
+        Customer customer_info = order.getCustomer();
+        String name = "";
+        if (customer_info.getName() == null){
+            name = customer_info.getLname() + " " +customer_info.getFname();
+        }else{
+            name = customer_info.getName();
+        }
+
+        customer_mobile.setText("Mobile Number: " +customer_info.getMobile());
+        customer_number.setText("No: " +String.valueOf(customer_info.getId()));
+        customer_name.setText("Name: " +name);
+
+
+        final AlertDialog dialog  = builder.create();
+        btn_ok.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+
+            }
+        });
+
+        btn_print.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                printReceipt(BarcodeFormat.QR_CODE, order);
+                dialog.dismiss();
+            }
+        });
+
+        if (withPrintBtn == true){
+            btn_print.setVisibility(View.VISIBLE);
+        }else{
+            btn_print.setVisibility(View.GONE);
+        }
+        dialog.show();
+    }
+
 
 }
 

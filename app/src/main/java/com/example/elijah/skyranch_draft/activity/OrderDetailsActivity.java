@@ -6,6 +6,9 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -19,10 +22,12 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.elijah.skyranch_draft.AppConfig;
+import com.example.elijah.skyranch_draft.Cart;
 import com.example.elijah.skyranch_draft.Customer;
 import com.example.elijah.skyranch_draft.DatabaseHelper;
 import com.example.elijah.skyranch_draft.LoginActivity;
 import com.example.elijah.skyranch_draft.LoginToken;
+import com.example.elijah.skyranch_draft.OrderHeader;
 import com.example.elijah.skyranch_draft.Product;
 import com.example.elijah.skyranch_draft.ProductActivity;
 import com.example.elijah.skyranch_draft.R;
@@ -31,6 +36,8 @@ import com.example.elijah.skyranch_draft.VolleySingleton;
 import com.example.elijah.skyranch_draft.adapter.OrderDetailAdapter;
 import com.example.elijah.skyranch_draft.adapter.SalesHistoryAdapter;
 import com.example.elijah.skyranch_draft.model.OrderDetail;
+import com.example.elijah.skyranch_draft.utils.AidlUtil;
+import com.google.zxing.BarcodeFormat;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -50,6 +57,7 @@ public class OrderDetailsActivity extends AppCompatActivity {
     private SessionManager session;
     private RequestQueue mRequestQ;
     private ProgressBar pbOrderDetail;
+    private OrderHeader header;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,7 +87,8 @@ public class OrderDetailsActivity extends AppCompatActivity {
             mAdapter = new OrderDetailAdapter(OrderDetailsActivity.this, mList);
             mRv_Detail.setAdapter(mAdapter);
 
-            
+            header = intent.getExtras().getParcelable(SalesHistoryAdapter.KEY_ORDER);
+
         }else{
             /* show no data available*/
         }
@@ -192,4 +201,38 @@ public class OrderDetailsActivity extends AppCompatActivity {
     }
 
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.order_details_menu, menu);
+        MenuItem printOS =  menu.findItem(R.id.action_print_os);
+
+        if (AidlUtil.getInstance().isConnect()){
+            printOS.setVisible(true);
+        }else{
+            printOS.setVisible(false);
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_view_os:
+                SalesActivity.showORDialog(OrderDetailsActivity.this, header, false);
+                return true;
+
+            case R.id.action_print_os:
+                SalesActivity.printReceipt(BarcodeFormat.QR_CODE, header);
+                return true;
+
+            default:
+                // If we got here, the user's action was not recognized.
+                // Invoke the superclass to handle it.
+                return super.onOptionsItemSelected(item);
+        }
+
+    }
 }

@@ -17,10 +17,17 @@
         app:showAsAction="ifRoom"/>
 
     <item
+        android:id="@+id/action_refresh"
+        android:icon="@drawable/ic_refresh_white_24dp"
+        android:orderInCategory="3"
+        android:title="Refresh"
+        app:showAsAction="ifRoom"/>
+
+    <item
         android:id="@+id/action_settings"
         android:title="Settings"
         app:showAsAction="never"
-        android:orderInCategory="3"/>
+        android:orderInCategory="4"/>
 
     <item
         android:id="@+id/action_testprint"
@@ -37,6 +44,6 @@
         android:id="@+id/action_signout"
         android:title="Signout"
         android:icon="@drawable/ic_exit_24dp"
-        android:orderInCategory="4"
+        android:orderInCategory="5"
         app:showAsAction="never"/>
 </menu>

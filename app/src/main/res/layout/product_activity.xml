@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/pl_products"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@android:color/white">
+    android:background="@android:color/white"
+    android:orientation="vertical">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -26,11 +27,28 @@
             app:searchBackground="@color/colorPrimary" />
 
     </RelativeLayout>
-    <Spinner android:layout_height="wrap_content"
-        android:layout_width="match_parent"
-        android:id="@+id/spinner_proCat"
-        />
 
+    <!--<EditText-->
+    <!--android:id="@+id/pro_samp"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:hint="Sample search"-->
+    <!--android:imeOptions="actionDone"-->
+    <!--android:singleLine="true" />-->
+
+    <Spinner
+        android:id="@+id/spinner_proCat"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+    <include layout="@layout/txt_no_results" ></include>
     <include layout="@layout/product_content" />
+
+    <Button
+        android:id="@+id/refresh_products"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Refresh">
+
+    </Button>
 
 </LinearLayout>

@@ -29,15 +29,23 @@ public class ProductDetails extends AppCompatActivity {
 
        Product product =  getIntent().getExtras().getParcelable("parcel_data");
         Log.d(TAG, "onCreate: " +product);
-//        Toast.makeText(this, "" +product, Toast.LENGTH_SHORT).show();
 
         TextView tvProName = findViewById(R.id.tvProDetailName);
         ImageView ivProImg = findViewById(R.id.ivProDetailImg);
         TextView tvProPrice = findViewById(R.id.tvPrice);
+        TextView tvProStatus = findViewById(R.id.tvProStatus);
 
         tvProName.setText(product.getName());
         Picasso.get().load(product.getImgUrl()).error(R.drawable.pro_img_placeholder).fit().centerInside().into(ivProImg);
-        tvProPrice.setText(String.valueOf(product.getO_price()));
+        tvProPrice.setText(String.format("%,.2f",product.getO_price()));
+        String status = "";
+        switch (product.getStatus()){
+            case 'S' : status = "Served"; break;
+            case 'C' : status = "Completed"; break;
+            case 'I' : status = "Invoiced"; break;
+            default  : status = "Pending"; break;
+        }
+        tvProStatus.setText(status);
     }
 
 

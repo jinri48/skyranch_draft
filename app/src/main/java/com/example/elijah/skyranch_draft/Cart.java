@@ -273,7 +273,7 @@ public class Cart extends BaseActivity {
 
     }
 
-    private void printReceipt(BarcodeFormat format){
+    public void printReceipt(BarcodeFormat format){
         if(baseApp.isAidl()){
             boolean isBold = true;
             boolean isUnderLine = false;

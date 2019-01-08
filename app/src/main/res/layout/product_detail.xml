@@ -1,27 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:layout_height="match_parent">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
 
-
         <ImageView
             android:id="@+id/ivProDetailImg"
             android:layout_width="match_parent"
             android:layout_height="200dp"
+            android:layout_below="@+id/my_toolbar"
             android:fitsSystemWindows="true"
             android:scaleType="centerCrop"
-            android:src="@drawable/cover" android:layout_below="@+id/my_toolbar"/>
+            android:src="@drawable/cover" />
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_below="@+id/ivProDetailImg" android:padding="16dp">
+            android:layout_below="@+id/ivProDetailImg"
+            android:padding="16dp">
 
             <TextView
                 android:id="@+id/tvProDetailName"
@@ -29,13 +30,23 @@
                 android:layout_height="wrap_content"
                 android:text="Product name"
                 android:textSize="@dimen/product_title" />
+
+
             <TextView
+                android:id="@+id/tvPrice"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Product name"
-                android:textSize="10sp"
-                android:id="@+id/tvPrice"
-                android:layout_below="@id/tvProDetailName"/>
+                android:layout_below="@id/tvProDetailName"
+                android:text="Price"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/tvProStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Status"
+                android:textSize="13sp"
+                android:layout_below="@id/tvPrice"/>
         </RelativeLayout>
 
 
