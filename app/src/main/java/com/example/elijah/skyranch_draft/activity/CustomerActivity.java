@@ -78,6 +78,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import br.com.sapereaude.maskedEditText.MaskedEditText;
+
 public class CustomerActivity extends AppCompatActivity implements SingleClickItemListener {
     private static final String TAG = CustomerActivity.class.getSimpleName();
     private DatabaseHelper mDBHelper;
@@ -95,8 +97,9 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
     // custom dialog widgets
     private AlertDialog dialog;
     ProgressDialog prgDialog;
-    private EditText bday, input_lname, input_fname, input_mobile, input_email;
-    private TextInputLayout layout_lname, layout_fname, layout_email, layout_mobile, layout_bday;
+    private EditText bday, input_lname, input_fname, input_email;
+    private MaskedEditText input_phone;
+    private TextInputLayout layout_lname, layout_fname, layout_email, layout_bday, layout_mobile1;
 
     // isPhone Exists
     private boolean isPhoneExists;
@@ -291,13 +294,14 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
                             /*
                              * TODO: make a dialog that the user is not currently on duty
                              * */
-                            finish();
+
                             session.setLogin(false);
                             mDBHelper.deleteUsers();
                             mDBHelper.deleteAllItems();
 
                             Intent intent = new Intent(CustomerActivity.this, LoginActivity.class);
                             startActivity(intent);
+                            finish();
                         }
                     }
 
@@ -398,7 +402,7 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
                     customerDetails.setFname(input_fname.getText().toString().trim());
                     customerDetails.setEmail(input_email.getText().toString().trim());
                     customerDetails.setBday(bday.getText().toString());
-                    customerDetails.setMobile(input_mobile.getText().toString().trim());
+                    customerDetails.setMobile(input_phone.getText().toString());
                     addCustomer(customerDetails);
                     /*isPhoneExists(input_mobile.getText().toString().trim());*/
                 }
@@ -429,13 +433,13 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
         layout_lname = customer_dialog.findViewById(R.id.input_layout_lname);
         layout_fname = customer_dialog.findViewById(R.id.input_layout_fname);
         layout_email = customer_dialog.findViewById(R.id.input_layout_email);
-        layout_mobile = customer_dialog.findViewById(R.id.input_layout_mobile);
+        layout_mobile1 = customer_dialog.findViewById(R.id.input_layout_mobile1);
         layout_bday = customer_dialog.findViewById(R.id.input_layout_bday);
 
         // initialize edittext  fields
         input_lname = customer_dialog.findViewById(R.id.input_lname);
         input_fname = customer_dialog.findViewById(R.id.input_fname);
-        input_mobile = customer_dialog.findViewById(R.id.input_mobile);
+        input_phone = (MaskedEditText) customer_dialog.findViewById(R.id.input_phone);
         input_email = customer_dialog.findViewById(R.id.input_email);
 
         prgDialog = new ProgressDialog(this);
@@ -489,19 +493,17 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
         }
 
         /*
-         * MOBILE NUMBER
+         * MOBILE NUMBER with mask
          * */
-        if (input_mobile.getText().toString().trim().isEmpty()) { // empty
-            layout_mobile.setError(getString(R.string.err_mobile));
+        if (input_phone.getRawText().isEmpty()) { // empty
+            layout_mobile1.setError(getString(R.string.err_mobile));
             isValid = false;
-        } else if (validateMobile(input_mobile.getText().toString().trim()) == false) { // regex
-            layout_mobile.setError(getString(R.string.err_mobile));
+        } else if (validateMobile(input_phone.getText().toString()) == false) { // regex
+            layout_mobile1.setError(getString(R.string.err_mobile));
             isValid = false;
         } else {
-            layout_mobile.setErrorEnabled(false);
+            layout_mobile1.setErrorEnabled(false);
         }
-
-
 
         if(!input_email.getText().toString().trim().isEmpty()){
             if (android.util.Patterns.EMAIL_ADDRESS.matcher
@@ -716,12 +718,13 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
 
         final LoginToken user = mDBHelper.getUserToken();
         if (user == null) {
-            finish();
+
             session.setLogin(false);
             mDBHelper.deleteUsers();
             mDBHelper.deleteAllItems();
             Intent intent = new Intent(CustomerActivity.this, LoginActivity.class);
             startActivity(intent);
+            finish();
         }
 
         String url = AppConfig.ADD_CUSTOMER;
@@ -740,7 +743,8 @@ public class CustomerActivity extends AppCompatActivity implements SingleClickIt
                             if (response.getBoolean("success") == false){
                                 String message = response.getString("message");
                                 if (message.equals("Mobile Number Exists")){
-                                    layout_mobile.setError(getString(R.string.err_mobile2));
+//                                    layout_mobile.setError(getString(R.string.err_mobile2));
+                                    layout_mobile1.setError(getString(R.string.err_mobile2));
                                     return;
                                 }else if (message.toLowerCase().trim().contains("not on duty")){
                                     Toast.makeText(CustomerActivity.this, "You cannot add a customer when you are \"NOT ON DUTY\".", Toast.LENGTH_SHORT).show();

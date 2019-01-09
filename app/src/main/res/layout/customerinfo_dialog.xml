@@ -2,8 +2,10 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/pl_cust_dialog"
-    >
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:mask="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/pl_cust_dialog">
 
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
@@ -27,6 +29,8 @@
             android:textStyle="bold">
 
         </TextView>
+
+
 
         <android.support.design.widget.TextInputLayout
             android:id="@+id/input_layout_lname"
@@ -58,17 +62,20 @@
         </android.support.design.widget.TextInputLayout>
 
         <android.support.design.widget.TextInputLayout
-            android:id="@+id/input_layout_mobile"
+            android:id="@+id/input_layout_mobile1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="15dp">
+            android:layout_marginBottom="15dp"
+            android:hint="Mobile Number">
 
-            <EditText
-                android:id="@+id/input_mobile"
+            <br.com.sapereaude.maskedEditText.MaskedEditText
+                android:id="@+id/input_phone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/hint_mobile"
-                android:singleLine="true" />
+                android:inputType="phone"
+                mask:allowed_chars="1234567890"
+                mask:mask="+63##########" />
+
         </android.support.design.widget.TextInputLayout>
 
         <android.support.design.widget.TextInputLayout

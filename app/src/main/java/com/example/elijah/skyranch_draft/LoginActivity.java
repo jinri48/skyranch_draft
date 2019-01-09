@@ -161,6 +161,7 @@ public class LoginActivity extends AppCompatActivity {
 
                             btnLogin.setText("Login");
                             btnLogin.setEnabled(true);
+                            Log.d(TAG, "onResponse: " + response);
 
                             prompt.make(root_layout, msg, Snackbar.LENGTH_INDEFINITE).show();
                             // Successful logged in

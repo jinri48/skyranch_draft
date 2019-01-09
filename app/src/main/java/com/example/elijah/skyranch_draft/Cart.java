@@ -327,13 +327,14 @@ public class Cart extends BaseActivity {
     private void addOrder() {
         final LoginToken user = mDBHelper.getUserToken();
         if (user == null) {
-            finish();
+
             session.setLogin(false);
             mDBHelper.deleteUsers();
             mDBHelper.deleteAllItems();
 
             Intent intent = new Intent(Cart.this, LoginActivity.class);
             startActivity(intent);
+            finish();
         }
         String url = AppConfig.ADD_CART_ITEMS;
         Log.d(TAG, "addOrder: url " +url);

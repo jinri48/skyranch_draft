@@ -46,9 +46,6 @@ import com.example.elijah.skyranch_draft.Interface.SalesHistoryAdapterListener;
 import com.example.elijah.skyranch_draft.LoginActivity;
 import com.example.elijah.skyranch_draft.LoginToken;
 import com.example.elijah.skyranch_draft.OrderHeader;
-import com.example.elijah.skyranch_draft.OrderItem;
-import com.example.elijah.skyranch_draft.Product;
-import com.example.elijah.skyranch_draft.ProductActivity;
 import com.example.elijah.skyranch_draft.R;
 import com.example.elijah.skyranch_draft.SessionManager;
 import com.example.elijah.skyranch_draft.VolleySingleton;
@@ -104,7 +101,7 @@ public class SalesActivity extends BaseActivity {
 
     public static BaseApp base;
 
-
+    private Snackbar prompt;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -230,7 +227,7 @@ public class SalesActivity extends BaseActivity {
     public void getTotal() {
         final LoginToken user = mDBHelper.getUserToken();
         if (user == null) {
-            Log.d(TAG, "getAllProducts: user is null");
+
             Intent intent = new Intent(SalesActivity.this, LoginActivity.class);
             startActivity(intent);
             finish();
@@ -252,33 +249,64 @@ public class SalesActivity extends BaseActivity {
                                      * TODO: make a dialog that the user is not currently on duty
                                      * */
 
-                                    finish();
                                     session.setLogin(false);
                                     mDBHelper.deleteUsers();
                                     mDBHelper.deleteAllItems();
 
+                                    Snackbar.make(root_layout,response.getString("message"), Snackbar.LENGTH_SHORT).show();
                                     Intent intent = new Intent(SalesActivity.this, LoginActivity.class);
                                     startActivity(intent);
+                                    finish();
+                                } else if (response.getInt("status") == 200){
+                                    if (response.getString("message").equals("Invalid Token")){
+                                        prompt = Snackbar.make(root_layout, response.getString("message") + ". Try to login again", Snackbar.LENGTH_INDEFINITE)
+                                                .setAction("RELOGIN", new View.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(View v) {
+
+                                                        session.setLogin(false);
+                                                        mDBHelper.deleteUsers();
+                                                        mDBHelper.deleteAllItems();
+                                                        /*should i also delete the cart items?*/
+                                                        Intent intent = new Intent(SalesActivity.this, LoginActivity.class);
+                                                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                                        startActivity(intent);
+                                                        finish();
+                                                    }
+                                                });
+                                        prompt.setActionTextColor(prompt.getContext().getResources().getColor(R.color.colorPrimary));
+                                        prompt.show();
+                                    }else{
+                                        Log.d(TAG, "onResponse: other relogin " +response.getString("message"));
+                                        Snackbar.make(root_layout,response.getString("message"), Snackbar.LENGTH_SHORT).show();
+                                    }
+                                }else{
+                                    Snackbar.make(root_layout,response.getString("message"), Snackbar.LENGTH_SHORT).show();
+                                }
+
+
+                            }else if(response.getBoolean("success") == true){
+                                if (response.getInt("status") == 200) {
+                                    JSONObject data = response.getJSONObject("data");
+                                    history.setNetAmount(data.getDouble("total"));
+
+                                    tv_totalAmount.setText("PHP " +String.format("%,.2f",history.getNetAmount()));
+                                    tv_date.setText("As of " +data.getString("from"));
+                                }
+
+
+                                if (VolleySingleton.prompt !=null){
+                                    VolleySingleton.prompt.dismiss();
                                 }
                             }
-                            if (response.getInt("status") == 200) {
-                                JSONObject data = response.getJSONObject("data");
-                                history.setNetAmount(data.getDouble("total"));
-
-                                tv_totalAmount.setText("PHP " +String.format("%,.2f",history.getNetAmount()));
-                                tv_date.setText("As of " +data.getString("from"));
-                            }
 
 
-                            if (VolleySingleton.prompt !=null){
-                                VolleySingleton.prompt.dismiss();
-                            }
 
                             // notify the adapter
                         } catch (JSONException e) {
                             e.printStackTrace();
                             Log.d("JSON", "onResponse: " + e.getMessage());
-                            Snackbar.make(root_layout, e.getMessage(), Snackbar.LENGTH_SHORT).show();
+                            Snackbar.make(root_layout, "Error:" +e.getMessage(), Snackbar.LENGTH_SHORT).show();
                         }
 
                     }
@@ -312,11 +340,10 @@ public class SalesActivity extends BaseActivity {
         pbSales.setVisibility(View.VISIBLE);
         final LoginToken user = mDBHelper.getUserToken();
         if (user == null) {
-            finish();
-            Log.d(TAG, "getAllProducts: user is null");
+            session.setLogin(false);
             Intent intent = new Intent(SalesActivity.this, LoginActivity.class);
             startActivity(intent);
-
+            finish();
             return;
         }
         String url = AppConfig.GET_SALES_HISTORY;
@@ -333,67 +360,99 @@ public class SalesActivity extends BaseActivity {
                                      * TODO: make a dialog that the user is not currently on duty
                                      * */
 
-                                    finish();
+
                                     session.setLogin(false);
                                     mDBHelper.deleteUsers();
                                     mDBHelper.deleteAllItems();
-
                                     Intent intent = new Intent(SalesActivity.this, LoginActivity.class);
                                     startActivity(intent);
-                                }
-                            }
-                            if (response.getInt("status") == 200) {
+                                    finish();
+                                }else if (response.getInt("status") == 200){
+                                    if (response.getString("message").equals("Invalid Token")){
+                                        prompt = Snackbar.make(root_layout, response.getString("message") + ". Try to login again", Snackbar.LENGTH_INDEFINITE)
+                                                .setAction("RELOGIN", new View.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(View v) {
+                                                        session.setLogin(false);
+                                                        mDBHelper.deleteUsers();
+                                                        Intent intent = new Intent(SalesActivity.this, LoginActivity.class);
+                                                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                                        startActivity(intent);
+                                                        finish();
+                                                    }
+                                                });
+                                        prompt.setActionTextColor(prompt.getContext().getResources().getColor(R.color.colorPrimary));
+                                        prompt.show();
 
-                                JSONObject data = response.getJSONObject("data");
-                                JSONObject datum = data.getJSONObject("orders");
-                                JSONArray salesOrders = datum.getJSONArray("data");
 
-                                ArrayList<OrderHeader> orderlist = new ArrayList<>();
-
-                                for (int i = 0; i < salesOrders.length(); i++) {
-
-                                    JSONObject item = salesOrders.getJSONObject(i);
-                                    Log.d(TAG, "onResponse: ites" +item);
-                                    JSONObject customerObj = item.getJSONObject("customer");
-
-                                    OrderHeader order = new OrderHeader();
-                                    order.setBranch_id(item.getString("branch_id"));
-                                    order.setCce_name(item.getString("cce_name"));
-                                    order.setCce_number(item.getString("encoded_by"));
-                                    order.setOs_date(item.getString("os_date"));
-                                    order.setOr_no(item.getLong("os_no"));
-                                    order.setTrans_type(item.getString("transact_type_id"));
-                                    order.setTotal_amount(item.optDouble("total_amount", 0));
-                                    order.setNet_amount(item.optDouble("net_amount", 0));
-                                    order.setStatus(item.getString("status"));
-
-                                    Customer customer = new Customer();
-                                    customer.setId(customerObj.optInt("id", 0));
-                                    Log.d(TAG, "onResponse: customer "+customerObj);
-                                    String custName = customerObj.isNull("name") ? "N/A" : customerObj.getString("name");
-                                    String custMob = customerObj.isNull("mobile_num") ? "N/A" : customerObj.getString("mobile_num");
-                                    customer.setName(custName);
-                                    customer.setMobile(custMob);
-
-                                    order.setCustomer(customer);
-                                    orderlist.add(order);
+                                    }else{
+                                        Log.d(TAG, "onResponse: other relogin " +response.getString("message"));
+                                        Snackbar.make(root_layout,response.getString("message"), Snackbar.LENGTH_SHORT).show();
+                                    }
+                                }else{
+                                    Log.d(TAG, "onResponse: 200 nor 401 " +response.getString("message"));
+                                    Snackbar.make(root_layout,response.getString("message"), Snackbar.LENGTH_SHORT).show();
                                 }
 
-                                history.setFrom(data.getString("from"));
-                                history.setTo(data.getString("to"));
-                                history.setOrders(orderlist);
-                                Log.d(TAG, "onResponse: orderlist " +orderlist);
+
+                            }else if(response.getBoolean("success") == true){
+
+                                if (response.getInt("status") == 200) {
+
+                                    JSONObject data = response.getJSONObject("data");
+                                    JSONObject datum = data.getJSONObject("orders");
+                                    JSONArray salesOrders = datum.getJSONArray("data");
+
+                                    ArrayList<OrderHeader> orderlist = new ArrayList<>();
+
+                                    for (int i = 0; i < salesOrders.length(); i++) {
+
+                                        JSONObject item = salesOrders.getJSONObject(i);
+                                        Log.d(TAG, "onResponse: ites" +item);
+                                        JSONObject customerObj = item.getJSONObject("customer");
+
+                                        OrderHeader order = new OrderHeader();
+                                        order.setBranch_id(item.getString("branch_id"));
+                                        order.setCce_name(item.getString("cce_name"));
+                                        order.setCce_number(item.getString("encoded_by"));
+                                        order.setOs_date(item.getString("os_date"));
+                                        order.setOr_no(item.getLong("os_no"));
+                                        order.setTrans_type(item.getString("transact_type_id"));
+                                        order.setTotal_amount(item.optDouble("total_amount", 0));
+                                        order.setNet_amount(item.optDouble("net_amount", 0));
+                                        order.setStatus(item.getString("status"));
+
+                                        Customer customer = new Customer();
+                                        customer.setId(customerObj.optInt("id", 0));
+                                        Log.d(TAG, "onResponse: customer "+customerObj);
+                                        String custName = customerObj.isNull("name") ? "N/A" : customerObj.getString("name");
+                                        String custMob = customerObj.isNull("mobile_num") ? "N/A" : customerObj.getString("mobile_num");
+                                        customer.setName(custName);
+                                        customer.setMobile(custMob);
+
+                                        order.setCustomer(customer);
+                                        orderlist.add(order);
+                                    }
+
+                                    history.setFrom(data.getString("from"));
+                                    history.setTo(data.getString("to"));
+                                    history.setOrders(orderlist);
+                                    Log.d(TAG, "onResponse: orderlist " +orderlist);
+                                }
                             }
+
+
 
                             // notify the adapter
                             pbSales.setVisibility(View.GONE);
                             mSalesAdapter.notifyDataSetChanged();
+
                             if (VolleySingleton.prompt !=null){
                                 VolleySingleton.prompt.dismiss();
                             }
                         } catch (JSONException e) {
                             e.printStackTrace();
-                            Snackbar.make(root_layout, e.getMessage(), Toast.LENGTH_SHORT).show();
+                            Snackbar.make(root_layout, "Error: " +e.getMessage(), Toast.LENGTH_SHORT).show();
                         }
 
                     }
@@ -567,6 +626,7 @@ public class SalesActivity extends BaseActivity {
         }
 
         Customer customer_info = order.getCustomer();
+        Log.d(TAG, "showORDialog: customer-info " +customer_info);
         String name = "";
         if (customer_info.getName() == null){
             name = customer_info.getLname() + " " +customer_info.getFname();

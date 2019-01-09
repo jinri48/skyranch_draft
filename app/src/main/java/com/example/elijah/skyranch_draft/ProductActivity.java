@@ -266,9 +266,10 @@ public class ProductActivity extends AppCompatActivity implements AdapterView.On
                             mDBHelper.deleteUsers(); // remove the current logged in user
                             mDBHelper.deleteAllItems(); // delete the temp cart items
                             session.setLogin(false);
-                            finish();
                             Intent intent = new Intent(ProductActivity.this, LoginActivity.class);
                             startActivity(intent);
+                            finish();
+
                         }
                     })
                     .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -282,9 +283,10 @@ public class ProductActivity extends AppCompatActivity implements AdapterView.On
         } else {
             mDBHelper.deleteUsers();
             session.setLogin(false);
-            finish();
+
             Intent intent = new Intent(ProductActivity.this, LoginActivity.class);
             startActivity(intent);
+            finish();
         }
 
     }
@@ -307,6 +309,7 @@ public class ProductActivity extends AppCompatActivity implements AdapterView.On
             Log.d(TAG, "getAllProducts: user is null");
             Intent intent = new Intent(ProductActivity.this, LoginActivity.class);
             startActivity(intent);
+            finish();
         } else {
             Log.d(TAG, "getAllProducts: user " + user);
             showProgressView();
@@ -362,6 +365,7 @@ public class ProductActivity extends AppCompatActivity implements AdapterView.On
                                         mDBHelper.deleteAllItems();
 
                                         Intent intent = new Intent(ProductActivity.this, LoginActivity.class);
+                                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                                         startActivity(intent);
                                         finish();
                                     }
@@ -455,13 +459,15 @@ public class ProductActivity extends AppCompatActivity implements AdapterView.On
                                     /*
                                      * TODO: make a dialog that the user is not currently on duty
                                      * */
-                                    finish();
+
                                     session.setLogin(false);
                                     mDBHelper.deleteUsers();
                                     mDBHelper.deleteAllItems();
 
                                     Intent intent = new Intent(ProductActivity.this, LoginActivity.class);
                                     startActivity(intent);
+                                    finish();
+
                                 }
                             }
                             if (response.getInt("status") == 200) {

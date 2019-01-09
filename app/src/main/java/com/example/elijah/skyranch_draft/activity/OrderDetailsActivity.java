@@ -10,6 +10,8 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -59,6 +61,10 @@ public class OrderDetailsActivity extends AppCompatActivity {
     private ProgressBar pbOrderDetail;
     private OrderHeader header;
 
+    private long order_header_id = -1;
+    FrameLayout root_layout;
+    private Button btnRefresh;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,12 +75,15 @@ public class OrderDetailsActivity extends AppCompatActivity {
         mDBHelper = DatabaseHelper.newInstance(this);
         session = new SessionManager(this);
         mRequestQ = Volley.newRequestQueue(this);
-        
+
+
         Intent intent = getIntent();
         long id = intent.getExtras().getLong(SalesHistoryAdapter.KEY_ORDER_ID, -1);
 
         pbOrderDetail = findViewById(R.id.pbOrderDetail);
-        
+        root_layout   = findViewById(R.id.pl_order_detail);
+        btnRefresh    = findViewById(R.id.btnRefreshOSD);
+
         if (id > -1 ){
             mList =  new ArrayList<>();
 
@@ -88,11 +97,21 @@ public class OrderDetailsActivity extends AppCompatActivity {
             mRv_Detail.setAdapter(mAdapter);
 
             header = intent.getExtras().getParcelable(SalesHistoryAdapter.KEY_ORDER);
-
+            order_header_id = id;
         }else{
             /* show no data available*/
         }
 
+        btnRefresh.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (order_header_id > 0){
+                    mList.clear();
+                    mAdapter.notifyDataSetChanged();
+                    getAllOSD(1, order_header_id);
+                }
+            }
+        });
 
 
     }
@@ -104,7 +123,9 @@ public class OrderDetailsActivity extends AppCompatActivity {
         // redirect to login page
         if (user == null) {
             Intent intent = new Intent(OrderDetailsActivity.this, LoginActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
+            finish();
         } else {
 
             String url = AppConfig.GET_ORDER_DETAILS + id + AppConfig.APPEND_DETAIL;
@@ -122,13 +143,14 @@ public class OrderDetailsActivity extends AppCompatActivity {
                                          * TODO: make a dialog that the user is not currently on duty
                                          * */
 
-                                        finish();
                                         session.setLogin(false);
                                         mDBHelper.deleteUsers();
                                         mDBHelper.deleteAllItems();
 
                                         Intent intent = new Intent(OrderDetailsActivity.this, LoginActivity.class);
+                                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                                         startActivity(intent);
+                                        finish();
                                     }
                                 }
                                 if (response.getInt("status") == 200) {
@@ -181,7 +203,7 @@ public class OrderDetailsActivity extends AppCompatActivity {
                 @Override
                 public void onErrorResponse(VolleyError error) {
                     pbOrderDetail.setVisibility(View.GONE);
-                    VolleySingleton.showErrors(error, OrderDetailsActivity.this);
+                    VolleySingleton.showErrors(error, root_layout, btnRefresh);
                     NetworkResponse response = error.networkResponse;
                     if (response != null && response.data != null) {
                         String errorString = new String(response.data);
@@ -228,6 +250,10 @@ public class OrderDetailsActivity extends AppCompatActivity {
                 SalesActivity.printReceipt(BarcodeFormat.QR_CODE, header);
                 return true;
 
+
+            case R.id.action_refresh_osd:
+                btnRefresh.performClick();
+                return true;
             default:
                 // If we got here, the user's action was not recognized.
                 // Invoke the superclass to handle it.
